@@ -1,26 +1,14 @@
 import React from "react";
 import { Text, View, ScrollView, StyleSheet, Pressable } from "react-native";
 import { Link ,useRouter} from "expo-router";
-
-
-
-//
+import Footer from './Footer';
 
 export default function Index() {
   const router = useRouter(); // useRouterでrouterを取得
 
   return (
-    <View style={styles.footer}>
-      {/* 投稿ボタン */}
-      <Pressable style={styles.button} onPress={() => {}}>
-        <Text>投稿</Text>
-      </Pressable>
-
-      {/* 救助要請ボタン */}
-      <Pressable style={styles.button} onPress={() => router.push("/help")}>
-        <Text>救助要請</Text>
-      </Pressable>
-    </View>
+      <Footer />
+      
   );
 }
 

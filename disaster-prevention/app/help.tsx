@@ -1,5 +1,6 @@
 import { Link ,useRouter} from "expo-router";
 import { View, Text ,Button} from "react-native";
+import Footer from "./Footer";
 
 export default function Home() {
     const router = useRouter();
@@ -8,6 +9,7 @@ export default function Home() {
     <Button title="メイン画面へ戻る" onPress={() => router.push("/")} />
     <Text>Home Screen</Text>
     <Link href="/">Go to Main Screen</Link>
+    <Footer />
     </View>
     );
 }
