@@ -5,7 +5,6 @@ import Footer from './Footer';
 
 export default function Index() {
   const router = useRouter(); // useRouterでrouterを取得
-
   return (
       <Footer />
   );

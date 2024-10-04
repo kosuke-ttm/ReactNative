@@ -55,3 +55,11 @@ Join our community of developers creating universal apps.
 ```bash
 npx expo install expo-router  
 ```
+
+```bash
+npx expo install react-native-maps
+```
+
+```bash
+npm install --save react-native-vector-icons 
+```
