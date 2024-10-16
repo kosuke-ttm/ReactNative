@@ -56,10 +56,17 @@ Join our community of developers creating universal apps.
 npx expo install expo-router  
 ```
 
+## 地図を表示させるため
 ```bash
 npx expo install react-native-maps
 ```
 
+## アイコンをつけるため
 ```bash
 npm install --save react-native-vector-icons 
+```
+
+## 自分の現在地を取得するため
+```bash
+npx expo install expo-location react-native-maps
 ```

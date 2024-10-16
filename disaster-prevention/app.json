@@ -13,7 +13,10 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+      "NSLocationWhenInUseUsageDescription": "このアプリはあなたの位置情報を使用します。"
+    }
     },
     "android": {
       "adaptiveIcon": {
