@@ -1,45 +1,55 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Text, View, ScrollView, StyleSheet, Pressable ,ActivityIndicator, Alert } from "react-native";
-import MapView, { Marker, Camera, Polygon } from 'react-native-maps';
-import { Link ,useRouter} from "expo-router";
+import { Text, View, StyleSheet, ActivityIndicator, Alert, Pressable } from 'react-native';
+import MapView, { Polygon, Camera } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Footer from './Footer';
 
-// 型定義の修正
 type LocationCoords = Location.LocationObjectCoords | null;
 
 export default function Index() {
-  const [location, setLocation] = useState<LocationCoords>(null); // 型定義を修正
-  const [heading, setHeading] = useState<number | null>(null); // デバイスの向きを保持
+  const [location, setLocation] = useState<LocationCoords>(null);
+  const [heading, setHeading] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter(); // useRouterでrouterを取得
-  const mapRef = useRef<MapView>(null); // MapViewの参照
+  const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
     (async () => {
-      try{
-      // 位置情報の権限をリクエスト
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('権限エラー', '位置情報へのアクセスが許可されていません。');
-        return;
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('権限エラー', '位置情報へのアクセスが許可されていません。');
+          return;
+        }
+
+        let { coords } = await Location.getCurrentPositionAsync({});
+        setLocation(coords);
+        setLoading(false);
+
+        Location.watchHeadingAsync((headingUpdate) => {
+          setHeading(headingUpdate.trueHeading);
+        });
+      } catch (error) {
+        console.error(error);
+        Alert.alert('エラー', '位置情報の取得に失敗しました。');
       }
-
-      // 現在地を取得
-      let { coords } = await Location.getCurrentPositionAsync({});
-      setLocation(coords);
-      setLoading(false);
-
-      // 方位情報を取得・更新
-      Location.watchHeadingAsync((headingUpdate) => {
-        setHeading(headingUpdate.trueHeading); // 北を基準にした角度（0〜360度）
-      });
-    }catch (error) {
-      console.error(error);
-      Alert.alert('エラー', '位置情報の取得に失敗しました。');
-    }
     })();
   }, []);
+
+  const moveToCurrentLocation = () => {
+    if (location && mapRef.current) {
+      const camera: Camera = {
+        center: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+        },
+        pitch: 0,
+        heading: heading || 0,
+        altitude: 1000,
+        zoom: 15,
+      };
+      mapRef.current.animateCamera(camera, { duration: 1000 });
+    }
+  };
 
   if (loading || !location || heading === null) {
     return (
@@ -50,52 +60,45 @@ export default function Index() {
     );
   }
 
-    // 矢印の三角形を描くための座標を計算
-    const arrowCoords = [
-      {
-        latitude: location.latitude + 0.0002 * Math.cos((heading - 90) * (Math.PI / 180)),
-        longitude: location.longitude + 0.0002 * Math.sin((heading - 90) * (Math.PI / 180)),
-      },
-      {
-        latitude: location.latitude + 0.0001 * Math.cos((heading + 30) * (Math.PI / 180)),
-        longitude: location.longitude + 0.0001 * Math.sin((heading + 30) * (Math.PI / 180)),
-      },
-      {
-        latitude: location.latitude + 0.0001 * Math.cos((heading - 30) * (Math.PI / 180)),
-        longitude: location.longitude + 0.0001 * Math.sin((heading - 30) * (Math.PI / 180)),
-      },
-    ];
+  const ARROW_LENGTH = 0.0003;
+  const BASE_WIDTH = 0.00015;
+  const BASE_OFFSET = 0.0001;
 
-  useEffect(() => {
-    // 位置情報と向きが更新されたらカメラを移動
-    if (location && heading !== null && mapRef.current) {
-      const camera: Camera = {
-        center: {
-          latitude: location.latitude,
-          longitude: location.longitude,
-        },
-        pitch: 0,
-        heading, // デバイスの向きに応じて回転
-        altitude: 1000,
-        zoom: 15,
-      };
-      // mapRef.current.animateCamera(camera, { duration: 1000 }); // アニメーション付きでカメラを更新
-    }
-  }, [location, heading]);
-
-  if (!location) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>現在地を取得しています...</Text>
-      </View>
-    );
-  }
-
+  const arrowCoords = [
+    {
+      latitude: location.latitude + ARROW_LENGTH * Math.cos(heading * (Math.PI / 180)),
+      longitude: location.longitude + ARROW_LENGTH * Math.sin(heading * (Math.PI / 180)),
+    },
+    {
+      latitude: location.latitude - (BASE_WIDTH / 2) * Math.sin(heading * (Math.PI / 180)) -
+                BASE_OFFSET * Math.cos(heading * (Math.PI / 180)),
+      longitude: location.longitude + (BASE_WIDTH / 2) * Math.cos(heading * (Math.PI / 180)) -
+                 BASE_OFFSET * Math.sin(heading * (Math.PI / 180)),
+    },
+    {
+      latitude: location.latitude - BASE_OFFSET * Math.cos(heading * (Math.PI / 180)),
+      longitude: location.longitude - BASE_OFFSET * Math.sin(heading * (Math.PI / 180)),
+    },
+    {
+      latitude: location.latitude + (BASE_WIDTH / 2) * Math.sin(heading * (Math.PI / 180)) -
+                BASE_OFFSET * Math.cos(heading * (Math.PI / 180)),
+      longitude: location.longitude - (BASE_WIDTH / 2) * Math.cos(heading * (Math.PI / 180)) -
+                 BASE_OFFSET * Math.sin(heading * (Math.PI / 180)),
+    },
+    {
+      latitude: location.latitude + ARROW_LENGTH * Math.cos(heading * (Math.PI / 180)),
+      longitude: location.longitude + ARROW_LENGTH * Math.sin(heading * (Math.PI / 180)),
+    },
+  ];
 
   return (
     <View style={styles.container}>
+      {/* <Text style={styles.text}>
+        緯度: {location.latitude.toFixed(6)}{' '}
+        経度: {location.longitude.toFixed(6)}
+      </Text> */}
       <MapView
+        ref={mapRef}
         style={styles.map}
         initialRegion={{
           latitude: location.latitude,
@@ -103,38 +106,31 @@ export default function Index() {
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}
-        showsUserLocation={true} // 現在地のマーカーを表示
+        showsUserLocation={true}
       >
-        {/* ユーザーの向きを示す矢印 */}
         <Polygon
           coordinates={arrowCoords}
-          fillColor="rgba(0, 150, 255, 0.6)" // 半透明の青色
+          fillColor="rgba(0, 150, 255, 0.6)"
           strokeColor="rgba(0, 0, 255, 0.9)"
           strokeWidth={2}
         />
       </MapView>
-    <Footer />
+
+      {/* 右下の丸いボタン */}
+      <Pressable style={styles.floatingButton} onPress={moveToCurrentLocation}>
+        <Text style={styles.buttonText}>現在地</Text>
+      </Pressable>
+
+      <Footer />
+      
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  footer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: 'white',
-    padding: 10,
-    height: 85,
-  },
-  button: {
-    padding: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 5,
-    alignItems: 'center',
+  text: {
+    fontSize: 20,
+    color: 'black',
   },
   container: {
     flex: 1,
@@ -147,5 +143,26 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 100,
+    right: 40,
+    width: 60,
+    height: 60,
+    borderRadius: 30, // 丸い形にする
+    backgroundColor: '#DCDCDC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10, // 他の要素より手前に表示
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 5, // Android用の影
+  },
+  buttonText: {
+    fontSize: 25,
+    color: '#000',
   },
 });

@@ -25,6 +25,12 @@ export function Footer() {
         <MaterialIcons name="emergency" size={24} color="black" />
         <Text>救助要請</Text>
         </Pressable>
+
+        {/* プロフィールボタン */}
+        <Pressable style={styles.button} onPress={() => router.push("/help")}>
+        <MaterialIcons name="account-circle" size={24} color="black" />
+        <Text>救助要請</Text>
+        </Pressable>
     </View>
     );
 };
