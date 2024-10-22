@@ -1,16 +1,40 @@
-import React from "react";
-import { Text, View, ScrollView, StyleSheet, Pressable } from "react-native";
+import React, {useState} from "react";
+import { Text, View, ScrollView, StyleSheet, Pressable, Button, TextInput} from "react-native";
 import { Link ,useRouter} from "expo-router";
 import Footer from './Footer';
 
-export default function Index() {
+export default function SampleScreen() {
   const router = useRouter(); // useRouterでrouterを取得
+  const [inputMsg, setInputMsg] = useState(''); // 入力値はstateで管理
+  let textInput;
   return (
+    <View style={styles.container}>
+      <TextInput
+        multiline={true}
+        ref={(input) => textInput = input} // 上で定義したtextInputに代入
+        style={styles.inputs}
+        placeholder='ここに文字を入力してください'
+        value={inputMsg}
+        onChangeText={(text) => {
+          setInputMsg(text);
+        }}
+      />
+
       <Footer />
+      </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  inputs: {
+    margin: 20,
+    padding: 5,
+    borderWidth: 1,
+    fontSize: 20,
+  },
   footer: {
     position: 'absolute',
     left: 0,
