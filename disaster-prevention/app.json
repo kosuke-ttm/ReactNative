@@ -13,7 +13,10 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+      "NSLocationWhenInUseUsageDescription": "このアプリはあなたの位置情報を使用します。"
+    }
     },
     "android": {
       "adaptiveIcon": {
@@ -27,7 +30,21 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "$(PRODUCT_NAME) があなたのカメラへのアクセスを求めています。"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "$(PRODUCT_NAME) があなたの写真へのアクセスを求めています。",
+          "savePhotosPermission": "$(PRODUCT_NAME) があなたの写真への保存を求めています。",
+          "isAccessMediaLocationEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

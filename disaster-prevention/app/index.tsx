@@ -1,102 +1,168 @@
-import React from "react";
-import { Text, View, ScrollView, StyleSheet, Pressable } from "react-native";
-import { Link ,useRouter} from "expo-router";
+import React, { useEffect, useState, useRef } from 'react';
+import { Text, View, StyleSheet, ActivityIndicator, Alert, Pressable } from 'react-native';
+import MapView, { Polygon, Camera } from 'react-native-maps';
+import * as Location from 'expo-location';
+import Footer from './Footer';
 
-
-
-//
+type LocationCoords = Location.LocationObjectCoords | null;
 
 export default function Index() {
-  const router = useRouter(); // useRouterでrouterを取得
+  const [location, setLocation] = useState<LocationCoords>(null);
+  const [heading, setHeading] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const mapRef = useRef<MapView>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('権限エラー', '位置情報へのアクセスが許可されていません。');
+          return;
+        }
+
+        let { coords } = await Location.getCurrentPositionAsync({});
+        setLocation(coords);
+        setLoading(false);
+
+        Location.watchHeadingAsync((headingUpdate) => {
+          setHeading(headingUpdate.trueHeading);
+        });
+      } catch (error) {
+        console.error(error);
+        Alert.alert('エラー', '位置情報の取得に失敗しました。');
+      }
+    })();
+  }, []);
+
+  const moveToCurrentLocation = () => {
+    if (location && mapRef.current) {
+      const camera: Camera = {
+        center: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+        },
+        pitch: 0,
+        heading: heading || 0,
+        altitude: 1000,
+        zoom: 15,
+      };
+      mapRef.current.animateCamera(camera, { duration: 1000 });
+    }
+  };
+
+  if (loading || !location || heading === null) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>現在地を取得しています...</Text>
+      </View>
+    );
+  }
+
+  const ARROW_LENGTH = 0.0003;
+  const BASE_WIDTH = 0.00015;
+  const BASE_OFFSET = 0.0001;
+
+  const arrowCoords = [
+    {
+      latitude: location.latitude + ARROW_LENGTH * Math.cos(heading * (Math.PI / 180)),
+      longitude: location.longitude + ARROW_LENGTH * Math.sin(heading * (Math.PI / 180)),
+    },
+    {
+      latitude: location.latitude - (BASE_WIDTH / 2) * Math.sin(heading * (Math.PI / 180)) -
+                BASE_OFFSET * Math.cos(heading * (Math.PI / 180)),
+      longitude: location.longitude + (BASE_WIDTH / 2) * Math.cos(heading * (Math.PI / 180)) -
+                 BASE_OFFSET * Math.sin(heading * (Math.PI / 180)),
+    },
+    {
+      latitude: location.latitude - BASE_OFFSET * Math.cos(heading * (Math.PI / 180)),
+      longitude: location.longitude - BASE_OFFSET * Math.sin(heading * (Math.PI / 180)),
+    },
+    {
+      latitude: location.latitude + (BASE_WIDTH / 2) * Math.sin(heading * (Math.PI / 180)) -
+                BASE_OFFSET * Math.cos(heading * (Math.PI / 180)),
+      longitude: location.longitude - (BASE_WIDTH / 2) * Math.cos(heading * (Math.PI / 180)) -
+                 BASE_OFFSET * Math.sin(heading * (Math.PI / 180)),
+    },
+    {
+      latitude: location.latitude + ARROW_LENGTH * Math.cos(heading * (Math.PI / 180)),
+      longitude: location.longitude + ARROW_LENGTH * Math.sin(heading * (Math.PI / 180)),
+    },
+  ];
 
   return (
-    <View style={styles.footer}>
-      {/* 投稿ボタン */}
-      <Pressable style={styles.button} onPress={() => {}}>
-        <Text>投稿</Text>
+    <View style={styles.container}>
+      {/* <Text style={styles.text}>
+        緯度: {location.latitude.toFixed(6)}{' '}
+        経度: {location.longitude.toFixed(6)}
+      </Text> */}
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={{
+          latitude: location.latitude,
+          longitude: location.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+        showsUserLocation={true}
+      >
+        <Polygon
+          coordinates={arrowCoords}
+          fillColor="rgba(0, 150, 255, 0.6)"
+          strokeColor="rgba(0, 0, 255, 0.9)"
+          strokeWidth={2}
+        />
+      </MapView>
+
+      {/* 右下の丸いボタン */}
+      <Pressable style={styles.floatingButton} onPress={moveToCurrentLocation}>
+        <Text style={styles.buttonText}>現在地</Text>
       </Pressable>
 
-      {/* 救助要請ボタン */}
-      <Pressable style={styles.button} onPress={() => router.push("/help")}>
-        <Text>救助要請</Text>
-      </Pressable>
+      <Footer />
+      
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  footer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: 'white',
-    padding: 10,
-    height: 85,
+  text: {
+    fontSize: 20,
+    color: 'black',
   },
-  button: {
-    padding: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 5,
+  container: {
+    flex: 1,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 100,
+    right: 40,
+    width: 60,
+    height: 60,
+    borderRadius: 30, // 丸い形にする
+    backgroundColor: '#DCDCDC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10, // 他の要素より手前に表示
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 5, // Android用の影
+  },
+  buttonText: {
+    fontSize: 25,
+    color: '#000',
+  },
 });
-
-//
-// export default function Index() {
-//   const router = useRouter(); // useRouter フックを使用してルーターを取得
-//   return (
-//     <View style={styles.container}>
-//       <ScrollView style={styles.scrollView}>
-//         <Text>Edit app/index.tsx to edit this screen.</Text>
-//         <Text>hjjdddd</Text>
-//       </ScrollView>
-//       <View style={styles.footer}>
-//         <Pressable style={styles.button} onPress={() => {}}>
-//           <Text>投稿</Text>
-//         </Pressable>
-//         <Pressable style={styles.button} onPress={() => router.push("/help")}>
-//           <Text>救助要請</Text>
-//         </Pressable>
-//       </View>
-//       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-//       <Text>Main Screen</Text>
-//       <Link href="/help">Go to Home</Link>
-//       <Link href="/help">Go to Settings</Link>
-//     </View>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-//   scrollView: {
-//     flex: 1,
-//   },
-//   footer: {
-//     position: 'absolute',
-//     left: 0,
-//     right: 0,
-//     bottom: 0,
-//     flexDirection: 'row',
-//     justifyContent: 'space-around',
-//     backgroundColor: 'white',
-//     padding: 10,
-//     height: 85,
-//     elevation: 5, // Android向けの影
-//     shadowColor: '#000', // iOS向けの影
-//     shadowOffset: { width: 0, height: -2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 2,
-//   },
-//   button: {
-//     padding: 10,
-//     backgroundColor: '#fffafa',
-//     borderRadius: 5,
-//     alignItems: 'center',
-//   },
-// });
