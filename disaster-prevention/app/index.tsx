@@ -3,6 +3,12 @@ import { Text, View, StyleSheet, ActivityIndicator, Alert, Pressable } from 'rea
 import MapView, { Polygon, Camera } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Footer from './Footer';
+import axios from 'axios';
+
+const TOKEN = 'pat19Mui49bpdqH7l.a536e57d623d08c82b28097681eb487b3f53d579fc3a75beb81ed01205f7d3ae';
+const BASE_ID = 'appR8i9ZmQZ3jwLjl';
+const TABLE_NAME = 'userinfo';
+const URL = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`;
 
 type LocationCoords = Location.LocationObjectCoords | null;
 
@@ -25,6 +31,10 @@ export default function Index() {
         setLocation(coords);
         setLoading(false);
 
+        fetchAirtableData();
+        // 使用例
+        addRecord({ Name: '新しいレコード', Description: 'このレコードの説明' });
+
         Location.watchHeadingAsync((headingUpdate) => {
           setHeading(headingUpdate.trueHeading);
         });
@@ -32,8 +42,38 @@ export default function Index() {
         console.error(error);
         Alert.alert('エラー', '位置情報の取得に失敗しました。');
       }
+
     })();
   }, []);
+
+  const fetchAirtableData = async () => {
+    try {
+      const response = await axios.get(URL, {
+        headers: {
+          Authorization: `Bearer ${TOKEN}` // トークンを使用
+        }
+      });
+      console.log('Data:');
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+  const addRecord = async (newRecord) => {
+    try {
+      const response = await axios.post(URL, {
+        fields: newRecord
+      }, {
+        headers: {
+          Authorization: `Bearer ${TOKEN}`, // トークンを使用
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('Record added:', response.data);
+    } catch (error) {
+      console.error('Error adding record:', error);
+    }
+  };
+  
 
   const moveToCurrentLocation = () => {
     if (location && mapRef.current) {
