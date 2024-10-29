@@ -2,6 +2,8 @@ import React, {useState} from "react";
 import { Text, View, ScrollView, StyleSheet, Pressable, Button, TextInput} from "react-native";
 import { Link ,useRouter} from "expo-router";
 import Footer from './Footer';
+import { Ionicons } from "@expo/vector-icons";
+
 
 export default function SampleScreen() {
   const router = useRouter(); // useRouterでrouterを取得
@@ -9,6 +11,19 @@ export default function SampleScreen() {
   let textInput;
   return (
     <View style={styles.container}>
+      <View style={styles.button}>
+        <Ionicons 
+          name="camera-outline" 
+          size={35} 
+          color="#666"
+          onPress={() => alert("カメラボタンが押されました")} //あとで変える
+        />
+        <Button
+          title="投稿"
+          onPress={() => alert("投稿ボタンが押されました")} //あとでデータベースに入力文字を送信するように変える
+        />
+      </View>
+
       <TextInput
         multiline={true}
         ref={(input) => textInput = input} // 上で定義したtextInputに代入
@@ -27,13 +42,16 @@ export default function SampleScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    margin: 10,
+    padding: 0,
     flex: 1,
   },
   inputs: {
-    margin: 20,
+    margin: 10,
     padding: 5,
     borderWidth: 1,
     fontSize: 20,
+    height: 280,
   },
   footer: {
     position: 'absolute',
@@ -47,10 +65,10 @@ const styles = StyleSheet.create({
     height: 85,
   },
   button: {
-    padding: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 5,
-    alignItems: 'center',
+    margin: 0,
+    padding: 0,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
   },
 });
 
