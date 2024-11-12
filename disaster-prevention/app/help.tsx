@@ -1,27 +1,86 @@
 // 救助要請画面
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Button, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { Button, Text, TouchableOpacity, View, StyleSheet,Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
+import * as Location from 'expo-location';
+
+// Node-REDのエンドポイントURL
+const url = "https://ev2-prod-node-red-3e84e9ed-10c.herokuapp.com/post";
+
+type LocationCoords = Location.LocationObjectCoords | null;
 
 const App: React.FC = () => {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [mediaLibraryPermission, requestMediaLibraryPermission] = MediaLibrary.usePermissions();
   const cameraRef = useRef<CameraView>(null);
+  const [location, setLocation] = useState<LocationCoords>(null);
+  const [heading, setHeading] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       console.log("useEffect実行");
       await requestCameraPermission();
       await requestMediaLibraryPermission();
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('権限エラー', '位置情報へのアクセスが許可されていません。');
+          return;
+        }
+
+        let { coords } = await Location.getCurrentPositionAsync({});
+        setLocation(coords);
+        setLoading(false);
+
+        Location.watchHeadingAsync((headingUpdate) => {
+          setHeading(headingUpdate.trueHeading);
+        });
+      } catch (error) {
+        console.error(error);
+        Alert.alert('エラー', '位置情報の取得に失敗しました。');
+      }
     })();
   }, []);
+
+  //backend start
+  // 送信するデータ（JSON形式）
 
   const savePhoto = useCallback(async (uri: string) => {
     try {
       if (mediaLibraryPermission?.granted) {
         const asset = await MediaLibrary.createAssetAsync(uri);
         await MediaLibrary.createAlbumAsync("MyApp", asset, false);
+        console.log(location);
+
+        const data = {
+          name: "gatio",
+          age: 9,
+          message: "nantekotta",
+          gps: location
+        };
+        // POSTリクエストを送信
+        fetch(url, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        })
+        .then(response => {
+          if (!response.ok) {
+              throw new Error(`Failed to send data. Status code: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(responseData => {
+          console.log("Data sent successfully!");
+          console.log("Response from Node-RED:", responseData);
+        })
+        .catch(error => {
+          console.error(error.message);
+        });
         console.log('写真を保存しました');
       } else {
         console.log('メディアライブラリの権限がありません');
@@ -41,6 +100,7 @@ const App: React.FC = () => {
         }
         console.log('写真を撮影しました:', photo.uri);
         await savePhoto(photo.uri);
+
       } catch (error) {
         console.error('写真の撮影に失敗しました:', error);
       }
@@ -110,98 +170,4 @@ const styles = StyleSheet.create({
 });
 
 export default App;
-
-
-// import React, { useState, useEffect, useRef } from 'react';
-// import { View, Text, StyleSheet, Button, Alert, Image } from 'react-native';
-// import { CameraType } from 'expo-camera';
-// import * as MediaLibrary from 'expo-media-library';
-// import { Camera } from 'expo-camera';
-// import { CameraCapturedPicture } from 'expo-camera';
-
-
-
-
-// export default function App() {
-//   const [hasCameraPermission, setHasCameraPermission] = useState(false);
-//   const [hasMediaLibraryPermission, setHasMediaLibraryPermission] = useState(false);
-//   // const [cameraRef, setCameraRef] = useState<React.RefObject<typeof Camera> | null>(null); //カメラ参照用
-//   const cameraRef = useRef<Camera | null>(null);
-
-//   const [photoUri, setPhotoUri] = useState<string | null>(null); // 撮影した写真のURI
-
-//   useEffect(() => {
-//     (async () => {
-//       // カメラの権限リクエスト
-//       const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
-//       setHasCameraPermission(cameraStatus === 'granted');
-
-//       // メディアライブラリの権限リクエスト
-//       const { status: mediaStatus } = await MediaLibrary.requestPermissionsAsync();
-//       setHasMediaLibraryPermission(mediaStatus === 'granted');
-//     })();
-//   }, []);
-
-//   const takePicture = async () => {
-//     if (cameraRef) {
-//       try {
-//         const photo = await cameraRef.takePictureAsync(); // 写真を撮影
-//         setPhotoUri(photo.uri); // 撮影した写真のURIを保存
-
-//         if (hasMediaLibraryPermission) {
-//           const asset = await MediaLibrary.createAssetAsync(photo.uri); // メディアライブラリに保存
-//           Alert.alert('保存成功', '写真が保存されました。');
-//         } else {
-//           Alert.alert('保存失敗', 'メディアライブラリへのアクセスが許可されていません。');
-//         }
-//       } catch (error) {
-//         console.error(error);
-//         Alert.alert('エラー', '写真の撮影または保存に失敗しました。');
-//       }
-//     }
-//   };
-
-//   if (!hasCameraPermission) {
-//     return (
-//       <View style={styles.permissionContainer}>
-//         <Text>カメラへのアクセスが許可されていません。</Text>
-//       </View>
-//     );
-//   }
-
-//   return (
-//     <View style={styles.container}>
-//       <Camera
-//         style={styles.camera}
-//         type={CameraType.back}
-//         ref={(ref) => setCameraRef(ref)}
-//       />
-//       <Button title="写真を撮影" onPress={takePicture} />
-//       {photoUri && (
-//         <Image source={{ uri: photoUri }} style={styles.preview} />
-//       )}
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//   },
-//   camera: {
-//     flex: 1,
-//   },
-//   permissionContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   preview: {
-//     width: '100%',
-//     height: 300,
-//     marginTop: 10,
-//   },
-// });
-
 
