@@ -1,13 +1,20 @@
 import React, {useState} from "react";
 import { Text, View, ScrollView, StyleSheet, Pressable, Button, TextInput} from "react-native";
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Link ,useRouter} from "expo-router";
 import Footer from './Footer';
+import latitude from './index';
+import longitude from './index';
 import { Ionicons } from "@expo/vector-icons";
 
 
 export default function SampleScreen() {
   const router = useRouter(); // useRouterでrouterを取得
   const [inputMsg, setInputMsg] = useState(''); // 入力値はstateで管理
+
+  // Node-REDのエンドポイントURL
+  const url = "https://ev2-prod-node-red-3e84e9ed-10c.herokuapp.com/post";
+
   let textInput;
   return (
     <View style={styles.container}>
@@ -15,12 +22,48 @@ export default function SampleScreen() {
         <Ionicons 
           name="camera-outline" 
           size={35} 
-          color="#666"
-          onPress={() => alert("カメラボタンが押されました")} //あとで変える
+          color="#1E90FF"
+          onPress={ () => {
+            alert("カメラボタンが押されました");
+            }
+          } //あとで変える
         />
         <Button
           title="投稿"
-          onPress={() => alert("投稿ボタンが押されました")} //あとでデータベースに入力文字を送信するように変える
+          onPress={ () => {
+            alert("投稿ボタンが押されました");
+
+            // 送信するデータ（JSON形式）
+            const data = {
+              latitude: latitude,
+              longitude: longitude,
+              message: inputMsg,
+            };
+            // POSTリクエストを送信
+            fetch(url, {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json"
+              },
+              body: JSON.stringify(data)
+            })
+            .then(response => {
+              if (!response.ok) {
+                  throw new Error(`Failed to send data. Status code: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then(responseData => {
+              console.log("Data sent successfully!");
+              console.log("Response from Node-RED:", responseData);
+            })
+            .catch(error => {
+              console.error(error.message);
+            });
+
+            setInputMsg("");//入力文字を削除
+            }
+          }
         />
       </View>
 
