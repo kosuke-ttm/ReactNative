@@ -1,165 +1,180 @@
-// import React, { useEffect, useRef, useState } from 'react';
-// import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-// import { Camera, CameraView, useCameraPermissions } from 'expo-camera';
-// import * as MediaLibrary from 'expo-media-library';
-
-// const App: React.FC = () => {
-//   const [cameraPermission, requestCameraPermission] = Camera.useCameraPermissions();
-//   const [mediaLibraryPermission, requestMediaLibraryPermission] = MediaLibrary.usePermissions();
-//   const cameraRef = useRef<Camera>(null);
-
-//   useEffect(() => {
-//     (async () => {
-//       await requestCameraPermission();
-//       await requestMediaLibraryPermission();
-//     })();
-//   }, []);
-
-//   const takePicture = async () => {
-//     if (cameraRef.current) {
-//       try {
-//         const photo = await cameraRef.current.takePictureAsync();
-//         console.log('写真を撮影しました:', photo.uri);
-//         await savePicture(photo.uri);
-//       } catch (error) {
-//         console.error('写真の撮影に失敗しました:', error);
-//         Alert.alert('エラー', '写真の撮影に失敗しました。');
-//       }
-//     }
-//   };
-
-//   const savePicture = async (uri: string) => {
-//     try {
-//       if (mediaLibraryPermission?.granted) {
-//         const asset = await MediaLibrary.createAssetAsync(uri);
-//         await MediaLibrary.createAlbumAsync("MyApp", asset, false);
-//         console.log('写真を保存しました');
-//         Alert.alert('成功', '写真を保存しました。');
-//       } else {
-//         console.log('メディアライブラリの権限がありません');
-//         Alert.alert('権限エラー', 'メディアライブラリへのアクセス権限がありません。');
-//       }
-//     } catch (error) {
-//       console.error('写真の保存に失敗しました:', error);
-//       Alert.alert('エラー', '写真の保存に失敗しました。');
-//     }
-//   };
-
-//   if (!cameraPermission || !mediaLibraryPermission) {
-//     return <View style={styles.container}><Text>権限を確認中...</Text></View>;
-//   }
-
-//   if (!cameraPermission.granted || !mediaLibraryPermission.granted) {
-//     return (
-//       <View style={styles.container}>
-//         <Text>カメラとメディアライブラリの使用許可が必要です</Text>
-//         <TouchableOpacity 
-//           style={styles.button} 
-//           onPress={() => {
-//             requestCameraPermission();
-//             requestMediaLibraryPermission();
-//           }}
-//         >
-//           <Text style={styles.buttonText}>許可を求める</Text>
-//         </TouchableOpacity>
-//       </View>
-//     );
-//   }
-
-//   return (
-//     <View style={styles.container}>
-//       <CameraView 
-//         style={styles.camera} 
-//         ref={cameraRef}
-//       >
-//         <View style={styles.buttonContainer}>
-//           <TouchableOpacity 
-//             style={styles.button}
-//             onPress={takePicture}
-//           >
-//             <Text style={styles.buttonText}>写真を撮影</Text>
-//           </TouchableOpacity>
-//         </View>
-//       </CameraView>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   camera: {
-//     flex: 1,
-//     width: '100%',
-//   },
-//   buttonContainer: {
-//     position: 'absolute',
-//     bottom: 20,
-//     alignSelf: 'center',
-//   },
-//   button: {
-//     backgroundColor: 'blue',
-//     padding: 15,
-//     borderRadius: 10,
-//   },
-//   buttonText: {
-//     fontSize: 18,
-//     fontWeight: 'bold',
-//     color: 'white',
-//   },
-// });
-
-// export default App;
-
+// 救助要請画面
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Button, Text, TouchableOpacity, View, StyleSheet,Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useState } from 'react';
-import { Button, Text, TouchableOpacity, View } from 'react-native';
+import * as MediaLibrary from 'expo-media-library';
+import * as Location from 'expo-location';
 
-// アプリ
+// Node-REDのエンドポイントURL
+const url = "https://ev2-prod-node-red-3e84e9ed-10c.herokuapp.com/post";
+
+type LocationCoords = Location.LocationObjectCoords | null;
+
 const App: React.FC = () => {
-  const [permission, requestPermission] = useCameraPermissions();
-  const [camera, setCamera] = useState<CameraView | null>(null);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [mediaLibraryPermission, requestMediaLibraryPermission] = MediaLibrary.usePermissions();
+  const cameraRef = useRef<CameraView>(null);
+  const [location, setLocation] = useState<LocationCoords>(null);
+  const [heading, setHeading] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // カメラパーミッションのロード中
-  if (!permission) {
-    return <View />;
+  useEffect(() => {
+    (async () => {
+      console.log("useEffect実行");
+      await requestCameraPermission();
+      await requestMediaLibraryPermission();
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (status !== 'granted') {
+          Alert.alert('権限エラー', '位置情報へのアクセスが許可されていません。');
+          return;
+        }
+
+        let { coords } = await Location.getCurrentPositionAsync({});
+        setLocation(coords);
+        setLoading(false);
+
+        Location.watchHeadingAsync((headingUpdate) => {
+          setHeading(headingUpdate.trueHeading);
+        });
+      } catch (error) {
+        console.error(error);
+        Alert.alert('エラー', '位置情報の取得に失敗しました。');
+      }
+    })();
+  }, []);
+
+  //backend start
+  // 送信するデータ（JSON形式）
+
+  const savePhoto = useCallback(async (uri: string) => {
+    try {
+      if (mediaLibraryPermission?.granted) {
+        const asset = await MediaLibrary.createAssetAsync(uri);
+        await MediaLibrary.createAlbumAsync("MyApp", asset, false);
+        console.log(location);
+        // locationがnullでないことを確認
+        // if (!location) {
+        //   Alert.alert('エラー', '位置情報が取得できません');
+        //   return;  // 位置情報がない場合は処理を中止
+        // }
+
+        const data = {
+          name: "hirabayasi",
+          birthday: "2005-3-16",
+          gender: ["female"],
+          gps: location
+        };
+        // POSTリクエストを送信
+        fetch(url, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        })
+        .then(response => {
+          if (!response.ok) {
+              throw new Error(`Failed to send data. Status code: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(responseData => {
+          console.log("Data sent successfully!");
+          console.log("Response from Node-RED:", responseData);
+        })
+        .catch(error => {
+          console.error(error.message);
+        });
+        console.log('写真を保存しました');
+      } else {
+        console.log('メディアライブラリの権限がありません');
+      }
+    } catch (error) {
+      console.error('写真の保存に失敗しました:', error);
+    }
+  }, [mediaLibraryPermission]);
+
+  const takePicture = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync();
+        if (!photo) {
+          console.log('写真の撮影できません');
+          return;
+        }
+        console.log('写真を撮影しました:', photo.uri);
+        await savePhoto(photo.uri);
+
+
+      } catch (error) {
+        console.error('写真の撮影に失敗しました:', error);
+      }
+    }
+  };
+
+  if (!cameraPermission || !mediaLibraryPermission) {
+    return <View style={styles.container}><Text>権限を確認中...</Text></View>;
   }
 
-  // カメラ権限はまだ付与されていない
-  if (!permission.granted) {
+  if (!cameraPermission.granted || !mediaLibraryPermission.granted) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center' }}>
-        <Button onPress={requestPermission} title="カメラの起動を許可" />
+      <View style={styles.container}>
+        <Text>カメラとメディアライブラリの使用許可が必要です</Text>
+        <Button 
+          onPress={() => {
+            requestCameraPermission();
+            requestMediaLibraryPermission();
+          }} 
+          title="許可を求める" 
+        />
       </View>
     );
   }
 
-  // 写真の撮影
-  async function takePicture() {
-    if (camera) {
-      const photo = await camera.takePictureAsync();
-      console.log(photo);
-      // ここで撮影した写真を処理（保存、表示など）
-    }
-  }
-
-  // UI
   return (
-    <View style={{ flex: 1, justifyContent: 'center' }}>
-    <CameraView 
-      style={{ flex: 1 }} 
-      ref={(ref) => setCamera(ref)}
-    >
-    <View style={{ position: 'absolute', bottom: 20, alignSelf: 'center', backgroundColor: 'blue', }}>
-        <TouchableOpacity onPress={takePicture}>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', color: 'white', padding: 10 }}>写真の撮影</Text>
-        </TouchableOpacity>
-      </View>
-    </CameraView>
-  </View>
+    <View style={styles.container}>
+      <CameraView 
+        style={styles.camera} 
+        ref={cameraRef}
+      >
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={takePicture}>
+            <Text style={styles.buttonText}>写真の撮影</Text>
+          </TouchableOpacity>
+        </View>
+      </CameraView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  camera: {
+    flex: 1,
+    width: '100%',
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+  },
+  button: {
+    backgroundColor: 'blue',
+    padding: 15,
+    borderRadius: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+});
+
 export default App;
+

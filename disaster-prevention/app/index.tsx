@@ -3,6 +3,7 @@ import { Text, View, StyleSheet, ActivityIndicator, Alert, Pressable } from 'rea
 import MapView, { Polygon, Camera } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Footer from './Footer';
+import axios from 'axios';
 
 type LocationCoords = Location.LocationObjectCoords | null;
 
@@ -93,10 +94,10 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      {/* <Text style={styles.text}>
+      <Text style={styles.text}>
         緯度: {location.latitude.toFixed(6)}{' '}
         経度: {location.longitude.toFixed(6)}
-      </Text> */}
+      </Text>
       <MapView
         ref={mapRef}
         style={styles.map}
