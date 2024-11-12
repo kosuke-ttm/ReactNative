@@ -1,6 +1,10 @@
 cd disaster-prevention
 npx expo start
 
+```bash
+nvm use 20
+```
+
 参考：https://docs.expo.dev/develop/tools/
 
 
@@ -85,4 +89,9 @@ npx expo install expo-camera
 ## 写真を端末上に保存するため
 ```bash
 npx expo install expo-camera expo-media-library
+```
+
+##　選択肢を作るため
+```bash
+npm install @react-native-picker/picker @react-native-community/datetimepicker
 ```

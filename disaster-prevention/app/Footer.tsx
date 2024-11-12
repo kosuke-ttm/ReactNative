@@ -27,9 +27,9 @@ export function Footer() {
         </Pressable>
 
         {/* プロフィールボタン */}
-        <Pressable style={styles.button} onPress={() => router.push("/help")}>
+        <Pressable style={styles.button} onPress={() => router.push("/profile")}>
         <MaterialIcons name="account-circle" size={24} color="black" />
-        <Text>救助要請</Text>
+        <Text>プロフィール</Text>
         </Pressable>
     </View>
     );

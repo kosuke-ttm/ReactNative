@@ -1,11 +1,10 @@
-// 救助要請画面
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Button, Text, TouchableOpacity, View, StyleSheet,Alert } from 'react-native';
+import { Button, Text, TouchableOpacity, View, StyleSheet, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import * as Location from 'expo-location';
+import Footer from './Footer';
 
-// Node-REDのエンドポイントURL
 const url = "https://ev2-prod-node-red-3e84e9ed-10c.herokuapp.com/post";
 
 type LocationCoords = Location.LocationObjectCoords | null;
@@ -21,11 +20,12 @@ const App: React.FC = () => {
   useEffect(() => {
     (async () => {
       console.log("useEffect実行");
+      console.log(location);
       await requestCameraPermission();
       await requestMediaLibraryPermission();
+
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
-
         if (status !== 'granted') {
           Alert.alert('権限エラー', '位置情報へのアクセスが許可されていません。');
           return;
@@ -45,20 +45,17 @@ const App: React.FC = () => {
     })();
   }, []);
 
-  //backend start
-  // 送信するデータ（JSON形式）
-
   const savePhoto = useCallback(async (uri: string) => {
     try {
       if (mediaLibraryPermission?.granted) {
         const asset = await MediaLibrary.createAssetAsync(uri);
         await MediaLibrary.createAlbumAsync("MyApp", asset, false);
         console.log(location);
-        // locationがnullでないことを確認
-        // if (!location) {
-        //   Alert.alert('エラー', '位置情報が取得できません');
-        //   return;  // 位置情報がない場合は処理を中止
-        // }
+
+        if (!location) {
+          Alert.alert('エラー', '位置情報が取得できません');
+          return;
+        }
 
         const data = {
           name: "hirabayasi",
@@ -66,11 +63,11 @@ const App: React.FC = () => {
           gender: ["female"],
           gps: location
         };
-        // POSTリクエストを送信
+
         fetch(url, {
           method: "POST",
           headers: {
-              "Content-Type": "application/json"
+            "Content-Type": "application/json"
           },
           body: JSON.stringify(data)
         })
@@ -107,7 +104,6 @@ const App: React.FC = () => {
         console.log('写真を撮影しました:', photo.uri);
         await savePhoto(photo.uri);
 
-
       } catch (error) {
         console.error('写真の撮影に失敗しました:', error);
       }
@@ -140,11 +136,16 @@ const App: React.FC = () => {
         ref={cameraRef}
       >
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={takePicture}>
+          <TouchableOpacity 
+            style={styles.button} 
+            onPress={takePicture} 
+            disabled={loading || !location}
+          >
             <Text style={styles.buttonText}>写真の撮影</Text>
           </TouchableOpacity>
         </View>
       </CameraView>
+      <Footer />
     </View>
   );
 }
@@ -177,4 +178,3 @@ const styles = StyleSheet.create({
 });
 
 export default App;
-
