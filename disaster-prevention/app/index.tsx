@@ -94,10 +94,10 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      {/* <Text style={styles.text}>
+      <Text style={styles.text}>
         緯度: {location.latitude.toFixed(6)}{' '}
         経度: {location.longitude.toFixed(6)}
-      </Text> */}
+      </Text>
       <MapView
         ref={mapRef}
         style={styles.map}

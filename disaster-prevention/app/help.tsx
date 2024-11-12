@@ -25,6 +25,7 @@ const App: React.FC = () => {
       await requestMediaLibraryPermission();
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
+
         if (status !== 'granted') {
           Alert.alert('権限エラー', '位置情報へのアクセスが許可されていません。');
           return;
@@ -53,11 +54,16 @@ const App: React.FC = () => {
         const asset = await MediaLibrary.createAssetAsync(uri);
         await MediaLibrary.createAlbumAsync("MyApp", asset, false);
         console.log(location);
+        // locationがnullでないことを確認
+        // if (!location) {
+        //   Alert.alert('エラー', '位置情報が取得できません');
+        //   return;  // 位置情報がない場合は処理を中止
+        // }
 
         const data = {
-          name: "gatio",
-          age: 9,
-          message: "nantekotta",
+          name: "hirabayasi",
+          birthday: "2005-3-16",
+          gender: ["female"],
           gps: location
         };
         // POSTリクエストを送信
@@ -100,6 +106,7 @@ const App: React.FC = () => {
         }
         console.log('写真を撮影しました:', photo.uri);
         await savePhoto(photo.uri);
+
 
       } catch (error) {
         console.error('写真の撮影に失敗しました:', error);
