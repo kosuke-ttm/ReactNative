@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Button, Text, TouchableOpacity, View, StyleSheet, Alert } from 'react-native';
+import { Button, Text, TouchableOpacity, View, StyleSheet, Alert ,ActivityIndicator } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import * as Location from 'expo-location';
@@ -19,8 +19,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      console.log("useEffect実行");
-      console.log(location);
+      console.log(location?.latitude,location?.longitude);
       await requestCameraPermission();
       await requestMediaLibraryPermission();
 
@@ -135,16 +134,18 @@ const App: React.FC = () => {
         style={styles.camera} 
         ref={cameraRef}
       >
+        
         <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={takePicture} 
-            disabled={loading || !location}
-          >
-            <Text style={styles.buttonText}>写真の撮影</Text>
-          </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.button} 
+              onPress={takePicture} 
+              disabled={loading || !location}
+            >
+              <Text style={styles.buttonText}>写真の撮影</Text>
+            </TouchableOpacity>
         </View>
       </CameraView>
+      {loading && <ActivityIndicator size="large" color="#0000ff" />}
       <Footer />
     </View>
   );
@@ -169,6 +170,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'blue',
     padding: 15,
     borderRadius: 10,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    bottom: 100
   },
   buttonText: {
     fontSize: 18,

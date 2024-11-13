@@ -85,7 +85,7 @@ export default function SampleScreen() {
       </View>
 
       <TextInput
-        multiline={true}
+        multiline={false}
         style={styles.inputs}
         placeholder='ここに文字を入力してください'
         value={inputMsg}
