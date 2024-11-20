@@ -43,7 +43,7 @@ const App: React.FC = () => {
       }
     })();
   }, []);
-
+  
   const savePhoto = useCallback(async (uri: string) => {
     try {
       if (mediaLibraryPermission?.granted) {
