@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
+    "newArchEnabled": true,
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
@@ -15,8 +16,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-      "NSLocationWhenInUseUsageDescription": "このアプリはあなたの位置情報を使用します。"
-    }
+        "NSLocationWhenInUseUsageDescription": "このアプリはあなたの位置情報を使用します。"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -44,7 +45,8 @@
           "savePhotosPermission": "$(PRODUCT_NAME) があなたの写真への保存を求めています。",
           "isAccessMediaLocationEnabled": true
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

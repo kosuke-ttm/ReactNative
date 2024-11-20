@@ -145,7 +145,7 @@ const App: React.FC = () => {
             </TouchableOpacity>
         </View>
       </CameraView>
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
+
       <Footer />
     </View>
   );

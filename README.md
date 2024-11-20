@@ -95,3 +95,15 @@ npx expo install expo-camera expo-media-library
 ```bash
 npm install @react-native-picker/picker @react-native-community/datetimepicker
 ```
+
+npm install expo@52
+
+npm warn をなくならない
+
+### SDK51から52にアップグレードしてしまったことでビルドエラーになったから下を実行
+npm install -g expo-cli@latest
+npm update
+expo-cli upgrade
+npm i
+npm run prebuild
+npx expo install --fix

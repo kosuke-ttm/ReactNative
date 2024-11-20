@@ -55,7 +55,7 @@ export default function Index() {
   if (loading || !location || heading === null) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+
         <Text>現在地を取得しています...</Text>
       </View>
     );
