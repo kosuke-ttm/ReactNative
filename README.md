@@ -107,3 +107,9 @@ expo-cli upgrade
 npm i
 npm run prebuild
 npx expo install --fix
+
+### Expo SQLiteをインストール
+```bssh
+npx expo install expo-sqlite
+```
+

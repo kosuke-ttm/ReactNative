@@ -7,7 +7,6 @@ import Entypo from '@expo/vector-icons/Entypo';
 
 export function Footer() {
     const router = useRouter(); // useRouterでrouterを取得
-
     return (
     <View style={styles.footer}>
         {/* 投稿ボタン */}

@@ -3,6 +3,8 @@ import { Text, View, StyleSheet, Button, TextInput, Alert, Keyboard } from "reac
 import { Ionicons } from "@expo/vector-icons";
 import Footer from './Footer';
 import { Picker } from '@react-native-picker/picker'; // Pickerをインポート
+import * as SQLite from 'expo-sqlite';
+
 
 export default function SampleScreen() {
   const [name, setName] = useState('');
@@ -18,15 +20,37 @@ export default function SampleScreen() {
       setLoading(false);
     })();
   }, []);
+  
 
   const handlePost = () => {
     const data = {
       name: name,
       birthday: birthday,
       gender: gender, // 性別を追加
-      gps: location,
       message: inputMsg
     };
+    // データベースを開く
+    const db = SQLite.openDatabase('mydb.db');
+    db.transaction((tx) => {
+      tx.executeSql(
+        'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER);',
+        [],
+        () => console.log('テーブル作成成功'),
+        (_, error) => console.log('テーブル作成失敗:', error)
+      );
+    });
+    const getUsers = () => {
+      db.transaction((tx) => {
+        tx.executeSql(
+          'SELECT * FROM users;',
+          [],
+          (_, { rows }) => console.log(JSON.stringify(rows._array)),
+          (_, error) => console.log('データ取得失敗:', error)
+        );
+      });
+    };
+
+    
     console.log(data);
 
     fetch(url, {
@@ -67,12 +91,6 @@ export default function SampleScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.button}>
-        <Ionicons 
-          name="camera-outline" 
-          size={35} 
-          color="#1E90FF"
-          onPress={() => alert("カメラボタンが押されました")} 
-        />
         <Button
           title="投稿"
           onPress={handlePost}
@@ -153,5 +171,8 @@ const styles = StyleSheet.create({
     padding: 5,
     borderWidth: 1,
     fontSize: 20,
+    color: "#333",
+    
   },
+  
 });
