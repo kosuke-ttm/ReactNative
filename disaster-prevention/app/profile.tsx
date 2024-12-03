@@ -9,32 +9,33 @@ export default function SampleScreen() {
   const [gender, setGender] = useState(''); // 性別の状態
   const [loading, setLoading] = useState(true);
 
-  const urlPost = "https://ev2-prod-node-red-3e84d49c-22c.herokuapp.com/user/post";
-  const urlGet = "https://ev2-prod-node-red-3e84d49c-22c.herokuapp.com/user/get"; // データ取得用URL
+  const urlPost = "https://ev2-prod-node-red-11839213-b3c.herokuapp.com/user/post";
+  const urlGet = "https://ev2-prod-node-red-11839213-b3c.herokuapp.com/user/post"; // データ取得用URL
 
   useEffect(() => {
     (async () => {
-      await loadUserData(); // 初期データの読み込み
+      // await loadUserData(); // 初期データの読み込み
       setLoading(false);
     })();
   }, []);
 
-  const loadUserData = async () => {
-    try {
-      const response = await fetch(urlGet); // awaitを追加
-      if (!response.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-      const userData = await response.json(); // awaitを追加
-      console.log(userData)
-      setName(userData.UserName || '');
-      setBirthday(userData.BirthDate || '');
-      setGender(userData.Gender || '');
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      Alert.alert('エラー', 'ユーザー情報の取得に失敗しました。');
-    }
-  };
+  // const loadUserData = async () => {
+  //   try {
+  //     const response = await fetch(urlGet); // awaitを追加
+  //     console.log(response);
+  //     if (!response.ok) {
+  //       throw new Error('Failed to fetch user data');
+  //     }
+  //     const userData = await response.json(); // awaitを追加
+  //     console.log(userData)
+  //     setName(userData.UserName || '');
+  //     setBirthday(userData.BirthDate || '');
+  //     setGender(userData.Gender || '');
+  //   } catch (error) {
+  //     console.error('Error fetching user data:', error);
+  //     Alert.alert('エラー', 'ユーザー情報の取得に失敗しました。');
+  //   }
+  // };
 
   const handlePost = () => {
     const data = {
@@ -62,7 +63,7 @@ export default function SampleScreen() {
       console.log("Response from Node-RED:", responseData);
       
       // データ送信後に最新の情報を再取得
-      loadUserData();
+      // loadUserData();
     })
     .catch(error => {
       console.error(error.message);
