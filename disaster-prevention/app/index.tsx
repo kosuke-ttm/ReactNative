@@ -1,19 +1,56 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Text, View, StyleSheet, ActivityIndicator, Alert, Pressable } from 'react-native';
-import MapView, { Polygon, Camera } from 'react-native-maps';
+import MapView, { Polygon, Camera,Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Footer from './Footer';
-import axios from 'axios';
+
+const url = "https://ev2-prod-node-red-3e84d49c-22c.herokuapp.com/rescue/get";
 
 type LocationCoords = Location.LocationObjectCoords | null;
+type LocationData = {
+  id: any;
+  Latitude: any;
+  Longitude: any;
+};
 
 export default function Index() {
   const [location, setLocation] = useState<LocationCoords>(null);
   const [heading, setHeading] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const mapRef = useRef<MapView>(null);
+  // 既存の状態変数はそのままで
+  const [locationData, setLocationData] = useState<LocationData[]>([]);
+  const markers = [
+    { id: 1, coordinate: { latitude: 35.1350, longitude: 136.9784 }, title: 'マーカー1' },
+    { id: 2, coordinate: { latitude: 35.1350, longitude: 136.9788 }, title: 'マーカー2' },
+    { id: 3, coordinate: { latitude: 35.1350, longitude: 136.9781 }, title: 'マーカー3' },
+  ];
 
   useEffect(() => {
+    // Node-REDからデータを取得する関数
+    const fetchLocationData = async () => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setLocationData(data);
+        } else if (typeof data === 'object' && data !== null) {
+          // 単一のオブジェクトの場合、配列に変換
+          setLocationData([data]);
+        } else {
+          console.error('Received data is not an array or object:', data);
+          setLocationData([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch location data:', error);
+        setLocationData([]);
+        Alert.alert('エラー', 'データの取得に失敗しました。');
+      }
+    };
+    fetchLocationData();
     (async () => {
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -109,12 +146,29 @@ export default function Index() {
         }}
         showsUserLocation={true}
       >
+        {markers.map((marker) => (
+          <Marker
+            key={marker.id}
+            coordinate={marker.coordinate}
+            title={marker.title}
+          />))}
         <Polygon
           coordinates={arrowCoords}
           fillColor="rgba(0, 150, 255, 0.6)"
           strokeColor="rgba(0, 0, 255, 0.9)"
           strokeWidth={2}
         />
+        {/* 取得したデータに基づいてマーカーを表示 */}
+        {locationData && locationData.length > 0 && locationData.map((item) => (
+  <Marker
+    key={item.id}
+    coordinate={{
+      latitude: parseFloat(item.Latitude),
+      longitude: parseFloat(item.Longitude),
+    }}
+    title={`ID: ${item.id}`}
+  />
+))}
       </MapView>
 
       {/* 右下の丸いボタン */}
