@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, StyleSheet, Alert, Keyboard, ActivityIndicator, Animated } from "react-native";
-import Footer from './Footer';
+import { Text, View, StyleSheet, Button, TextInput, Alert, Keyboard, ActivityIndicator, Animated } from "react-native";
+import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+
+const urlPost = "https://ev2-prod-node-red-358eac71-e31.herokuapp.com/user/post";
 
 
 interface CustomAlertProps {
@@ -41,13 +44,12 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ message, visible }) => {
 export default function SampleScreen() {
   const [name, setName] = useState('');
   const [birthday, setBirthday] = useState('');
-  const [id] = useState(0);
+  const [userid] = useState(Date.now()); // ユニークなuseridとして現在のタイムスタンプを使用
   const [gender, setGender] = useState('');
   const [loading, setLoading] = useState(true);
   const [alertVisible, setAlertVisible] = useState(false);
+  const router = useRouter();
   const [alertMessage, setAlertMessage] = useState('');
-  
-  const urlPost = "https://ev2-prod-node-red-11839213-b3c.herokuapp.com/user/post";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,7 +68,6 @@ export default function SampleScreen() {
   const loadData = async (key: string): Promise<any> => {
     try {
       const jsonValue = await AsyncStorage.getItem(key);
-      console.log("asyncloadData",jsonValue);
       return jsonValue != null ? JSON.parse(jsonValue) : null;
     } catch (e) {
       console.error('データの取得に失敗しました:', e);
@@ -90,7 +91,13 @@ export default function SampleScreen() {
   };
 
   const handlePost = async () => {
-    const dataToSend = { id, name, birthday, gender };
+    if (!name || !birthday || !gender) {
+      Alert.alert('エラー', 'すべてのフィールドを入力してください。');
+      return;
+    }
+
+    const dataToSend = { userid, name, birthday, gender };
+    console.log("サーバーに送る情報：", dataToSend);
     showCustomAlert('確定中...');
   
     try {
@@ -102,29 +109,24 @@ export default function SampleScreen() {
         body: JSON.stringify(dataToSend),
       });
   
-      // レスポンスのステータスチェック
       if (!response.ok) {
         throw new Error(`Failed to send data. Status code: ${response.status}`);
       }
   
-      // レスポンスの内容を取得
       const responseData = await response.json();
-      
-      // レスポンスデータをUIに表示
+      console.log(responseData);
       Alert.alert('確定しました', `サーバーからのレスポンス:\n${JSON.stringify(responseData, null, 2)}`);
-      console.log("Response from Node-RED:", responseData);
-  
-      // データを保存
-      await saveData('myKey', { id, name, birthday, gender });
+      //TODO:ここでサーバーから取ってきたjsonデータからuseridを取ってきて変数useridに格納する処理を書く
+      await saveData('myKey', { userid, name, birthday, gender });
+      router.replace('/register');
     } catch (error) {
-      // 型ガードでエラーメッセージを取得
-    if (error instanceof Error) {
-      console.error("Error during fetch:", error.message);
-      Alert.alert('エラー', error.message);
-    } else {
-      console.error("Unexpected error:", error);
-      Alert.alert('エラー', '予期しないエラーが発生しました。');
-    }
+      if (error instanceof Error) {
+        console.error("Error during fetch:", error.message);
+        Alert.alert('エラー', error.message);
+      } else {
+        console.error("Unexpected error:", error);
+        Alert.alert('エラー', '予期しないエラーが発生しました。');
+      }
     }
   };
 
@@ -145,20 +147,42 @@ export default function SampleScreen() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.messageText}>氏名</Text>
+      <TextInput
+        multiline={false}
+        style={styles.inputs}
+        placeholder='ここに氏名を入力してください'
+        value={name}
+        onChangeText={setName}
+        onKeyPress={handleKeyPress}
+      />
+      
+      <Text style={styles.messageText}>誕生日</Text>
+      <TextInput
+        multiline={false}
+        style={styles.inputs}
+        placeholder='yyyy-mm-dd'
+        value={birthday}
+        onChangeText={setBirthday}
+        onSubmitEditing={() => Keyboard.dismiss()}
+      />
+      
+      <Text style={styles.messageText}>性別</Text>
+      <Picker
+        selectedValue={gender}
+        style={styles.picker}
+        onValueChange={(itemValue) => setGender(itemValue)}
+      >
+        <Picker.Item label="男性" value="male" />
+        <Picker.Item label="女性" value="female" />
+        <Picker.Item label="その他" value="other" />
+      </Picker>
 
-      <Text style={styles.messageText}>【氏名】</Text>
-      <Text style={styles.displayText}>{name}</Text>
-      <Text ></Text>
-
-      <Text style={styles.messageText}>【誕生日】</Text>
-      <Text style={styles.displayText}>{birthday}</Text>
-      <Text ></Text>
-
-      <Text style={styles.messageText}>【性別】</Text>
-      <Text style={styles.displayText}>{gender}</Text>
+      <View style={styles.button}>
+        <Button title="確定" onPress={handlePost} />
+      </View>
 
       <CustomAlert message={alertMessage} visible={alertVisible} />
-      <Footer/>
     </View>
   );
 }
@@ -168,12 +192,6 @@ const styles = StyleSheet.create({
     margin: 10,
     padding: 0,
     flex: 1,
-    backgroundColor: '#fffaf0'
-    
-  },
-  displayText:{
-    fontSize: 24,
-    color: 'black'
   },
   inputs: {
     margin: 10,
@@ -194,26 +212,26 @@ const styles = StyleSheet.create({
   picker: {
     margin: 10,
     padding: 5,
-    color: "#333",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  alertContainer: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -100 }, { translateY: -25 }],
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: 'black',
-    elevation: 5,
-  },
-  alertText: {
-    fontSize: 16,
-  },
+    color:"black",
+   },
+   loadingContainer:{
+       flex :1 ,
+       justifyContent:'center',
+       alignItems:'center',
+   },
+   alertContainer: {
+     position: 'absolute',
+     top: '50%',
+     left: '50%',
+     transform: [{ translateX: -100 }, { translateY: -25 }],
+     backgroundColor: 'white',
+     padding: 20,
+     borderRadius: 5,
+     borderWidth: 1,
+     borderColor: 'black',
+     elevation: 5,
+   },
+   alertText:{
+     fontSize :16 ,
+   }
 });

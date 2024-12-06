@@ -15,7 +15,7 @@ export function Footer() {
         <Text>投稿</Text>
         </Pressable>
         {/* ホームボタン */}
-        <Pressable style={styles.button} onPress={() => router.push("/")}>
+        <Pressable style={styles.button} onPress={() => router.push("/home")}>
         <MaterialIcons name="home" size={24} color="black" />
         <Text>ホーム</Text>
         </Pressable>

@@ -5,7 +5,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as Location from 'expo-location';
 import Footer from './Footer';
 
-const url = "https://ev2-prod-node-red-3e84e9ed-10c.herokuapp.com/post";
+const url = "https://ev2-prod-node-red-358eac71-e31.herokuapp.com/post";
 
 type LocationCoords = Location.LocationObjectCoords | null;
 

@@ -113,3 +113,5 @@ npx expo install --fix
 npx expo install expo-sqlite
 ```
 
+npx expo install @react-native-async-storage/async-storage
+

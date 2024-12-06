@@ -3,6 +3,7 @@ import { Text, View, StyleSheet, Button, TextInput, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from 'expo-location';
 import Footer from './Footer';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type LocationCoords = Location.LocationObjectCoords | null;
 
@@ -11,7 +12,17 @@ export default function SampleScreen() {
   const [location, setLocation] = useState<LocationCoords>(null);
   const [loading, setLoading] = useState(true);
 
-  const url = "https://ev2-prod-node-red-3e84e9ed-10c.herokuapp.com/post";
+  const url = "https://ev2-prod-node-red-358eac71-e31.herokuapp.com/post";
+
+  const loadData = async (key: string): Promise<any> => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key);
+      console.log("asyncloadData",jsonValue);
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (e) {
+      console.error('データの取得に失敗しました:', e);
+    }
+  };
 
   useEffect(() => {
     (async () => {
