@@ -4,50 +4,12 @@ import Footer from './Footer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-interface CustomAlertProps {
-  message: string;
-  visible: boolean;
-}
-
-const CustomAlert: React.FC<CustomAlertProps> = ({ message, visible }) => {
-  const opacity = React.useRef(new Animated.Value(0)).current;
-
-  React.useEffect(() => {
-    if (visible) {
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-      setTimeout(() => {
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start();
-      }, 2000);
-    }
-  }, [visible]);
-
-  if (!visible) return null;
-
-  return (
-    <Animated.View style={[styles.alertContainer, { opacity }]}>
-      <Text style={styles.alertText}>{message}</Text>
-    </Animated.View>
-  );
-};
-
 export default function SampleScreen() {
   const [name, setName] = useState('');
   const [birthday, setBirthday] = useState('');
-  const [id] = useState(0);
+  const [userid, setUserid] = useState(0);
   const [gender, setGender] = useState('');
   const [loading, setLoading] = useState(true);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
-  
-  const urlPost = "https://ev2-prod-node-red-11839213-b3c.herokuapp.com/user/post";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,6 +18,7 @@ export default function SampleScreen() {
         setName(savedData.name || '');
         setBirthday(savedData.birthday || '');
         setGender(savedData.gender || '');
+        setUserid(savedData.userid || '')
       }
       setLoading(false);
     };
@@ -72,68 +35,7 @@ export default function SampleScreen() {
       console.error('データの取得に失敗しました:', e);
     }
   };
-
-  const saveData = async (key: string, value: any): Promise<void> => {
-    try {
-      const jsonValue = JSON.stringify(value);
-      await AsyncStorage.setItem(key, jsonValue);
-      console.log('データが保存されました:', jsonValue);
-    } catch (e) {
-      console.error('データの保存に失敗しました:', e);
-    }
-  };
-
-  const showCustomAlert = (message:string) => {
-    setAlertMessage(message);
-    setAlertVisible(true);
-    setTimeout(() => setAlertVisible(false), 2300);
-  };
-
-  const handlePost = async () => {
-    const dataToSend = { id, name, birthday, gender };
-    showCustomAlert('確定中...');
   
-    try {
-      const response = await fetch(urlPost, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dataToSend),
-      });
-  
-      // レスポンスのステータスチェック
-      if (!response.ok) {
-        throw new Error(`Failed to send data. Status code: ${response.status}`);
-      }
-  
-      // レスポンスの内容を取得
-      const responseData = await response.json();
-      
-      // レスポンスデータをUIに表示
-      Alert.alert('確定しました', `サーバーからのレスポンス:\n${JSON.stringify(responseData, null, 2)}`);
-      console.log("Response from Node-RED:", responseData);
-  
-      // データを保存
-      await saveData('myKey', { id, name, birthday, gender });
-    } catch (error) {
-      // 型ガードでエラーメッセージを取得
-    if (error instanceof Error) {
-      console.error("Error during fetch:", error.message);
-      Alert.alert('エラー', error.message);
-    } else {
-      console.error("Unexpected error:", error);
-      Alert.alert('エラー', '予期しないエラーが発生しました。');
-    }
-    }
-  };
-
-  const handleKeyPress = (e: any) => {
-    if (e.nativeEvent.key === 'Enter') {
-      Keyboard.dismiss();
-    }
-  };
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -150,14 +52,16 @@ export default function SampleScreen() {
       <Text style={styles.displayText}>{name}</Text>
       <Text ></Text>
 
+      <Text style={styles.messageText}>【ユーザーID】</Text>
+      <Text style={styles.displayText}>{userid}</Text>
+      <Text ></Text>
+
       <Text style={styles.messageText}>【誕生日】</Text>
       <Text style={styles.displayText}>{birthday}</Text>
       <Text ></Text>
 
       <Text style={styles.messageText}>【性別】</Text>
       <Text style={styles.displayText}>{gender}</Text>
-
-      <CustomAlert message={alertMessage} visible={alertVisible} />
       <Footer/>
     </View>
   );

@@ -4,7 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 
-const urlPost = "https://ev2-prod-node-red-358eac71-e31.herokuapp.com/user/post";
+const urlPost = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/user/register";
 
 
 interface CustomAlertProps {
@@ -45,7 +45,7 @@ export default function SampleScreen() {
   const [name, setName] = useState('');
   const [birthday, setBirthday] = useState('');
   const [userid] = useState(Date.now()); // ユニークなuseridとして現在のタイムスタンプを使用
-  const [gender, setGender] = useState('');
+  const [gender, setGender] = useState('other');
   const [loading, setLoading] = useState(true);
   const [alertVisible, setAlertVisible] = useState(false);
   const router = useRouter();
@@ -115,10 +115,10 @@ export default function SampleScreen() {
   
       const responseData = await response.json();
       console.log(responseData);
-      Alert.alert('確定しました', `サーバーからのレスポンス:\n${JSON.stringify(responseData, null, 2)}`);
+      Alert.alert('確定しました');
       //TODO:ここでサーバーから取ってきたjsonデータからuseridを取ってきて変数useridに格納する処理を書く
       await saveData('myKey', { userid, name, birthday, gender });
-      router.replace('/register');
+      router.replace('/home');
     } catch (error) {
       if (error instanceof Error) {
         console.error("Error during fetch:", error.message);

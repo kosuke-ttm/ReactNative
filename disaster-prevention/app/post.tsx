@@ -7,12 +7,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type LocationCoords = Location.LocationObjectCoords | null;
 
+const url = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/post";
+
 export default function SampleScreen() {
   const [inputMsg, setInputMsg] = useState(''); 
   const [location, setLocation] = useState<LocationCoords>(null);
   const [loading, setLoading] = useState(true);
-
-  const url = "https://ev2-prod-node-red-358eac71-e31.herokuapp.com/post";
 
   const loadData = async (key: string): Promise<any> => {
     try {

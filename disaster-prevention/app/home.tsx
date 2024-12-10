@@ -4,7 +4,7 @@ import MapView, { Marker, Callout, Polygon } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Footer from './Footer';
 
-const url = "https://ev2-prod-node-red-358eac71-e31.herokuapp.com/rescue/get";
+const url = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/rescue/get";
 
 type LocationCoords = Location.LocationObjectCoords | null;
 type LocationData = {

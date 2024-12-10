@@ -1,17 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const urlPost = "https://ev2-prod-node-red-358eac71-e31.herokuapp.com/user/post";
+const urlPost = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/user/login";
 
 export default function LoginScreen() {
-  const [userId, setUserId] = useState('');
+  const [userId, setUserId] = useState(0);
   const [birthday, setBirthday] = useState('');
   const router = useRouter();
-  const gender = useState('other');
 
-  const saveData = async (key: string, value: any): Promise<void> => {
+  useEffect(() => {
+    loadSavedData();
+  }, []);
+
+  const loadSavedData = async () => {
+    try {
+      const savedData = await AsyncStorage.getItem('myKey');
+      if (savedData !== null) {
+        const parsedData = JSON.parse(savedData);
+        setUserId(parsedData.userId || '');
+        setBirthday(parsedData.birthday || '');
+      }
+    } catch (e) {
+      console.error('データの取得に失敗しました:', e);
+    }
+  };
+
+  const saveData = async (key:any, value:any) => {
     try {
       const jsonValue = JSON.stringify(value);
       await AsyncStorage.setItem(key, jsonValue);
@@ -21,29 +37,45 @@ export default function LoginScreen() {
     }
   };
 
-  const handleLogin = () => {
-    if (!userId.trim() || !birthday.trim()) {
+  const handleLogin = async () => {
+    if (!userId || !birthday.trim()) {
       Alert.alert('エラー', 'ユーザーIDと誕生日を入力してください。');
       return;
     }
 
-    // 誕生日の形式チェック (YYYY-MM-DD)
     const birthdayRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!birthdayRegex.test(birthday)) {
       Alert.alert('エラー', '誕生日の形式が正しくありません。YYYY-MM-DDの形式で入力してください。');
       return;
     }
 
-    //TODO:ノードレッドにつなげる処理（ログイン）
-    //nameとgenderを取ってきてメモリに格納する
+    try {
+      const response = await fetch(urlPost, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, birthday }),
+      });
 
+      if (!response.ok) {
+        throw new Error(`Failed to send data. Status code: ${response.status}`);
+      }
 
+      const responseData = await response.json();
+      console.log('サーバーからの応答:', responseData);
 
-    // ここにログイン処理を実装
-    // 名前も追加でわかるようにする
-    saveData('myKey', { userId, birthday, gender });
-    // 認証が成功したら、メイン画面に遷移
-    router.replace('/home');
+      if (responseData.success) {
+        await saveData('myKey', { userId, birthday, name: responseData.name, gender: responseData.gender });
+        Alert.alert('ログイン成功', 'ホーム画面に移動します。');
+        router.replace('/home');
+      } else {
+        Alert.alert('ログイン失敗', responseData.message || 'ユーザー情報が見つかりませんでした。');
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      Alert.alert('エラー', 'ログイン中にエラーが発生しました。');
+    }
   };
 
   const handleRegister = () => {
@@ -56,9 +88,9 @@ export default function LoginScreen() {
       <TextInput
         style={styles.input}
         placeholder="数字"
-        value={userId}
-        placeholderTextColor="gray" // プレースホルダーの色
-        onChangeText={setUserId}
+        value={userId.toString()}
+        placeholderTextColor="gray"
+        onChangeText={(text) => setUserId(parseInt(text) || 0)}
         keyboardType="numeric"
       />
       <Text style={styles.messageText}>誕生日</Text>
@@ -66,20 +98,20 @@ export default function LoginScreen() {
         style={styles.input}
         placeholder="yyyy-mm-dd"
         value={birthday}
-        placeholderTextColor="gray" // プレースホルダーの色
+        placeholderTextColor="gray"
         onChangeText={setBirthday}
       />
-      <Text style={styles.messageText}> </Text>
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>ログイン</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.regibutton} onPress={handleRegister}>
         <Text style={styles.buttonText}>新規登録</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+// styles は変更なし
 
 const styles = StyleSheet.create({
   container: {
