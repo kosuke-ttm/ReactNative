@@ -1,13 +1,26 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Button, Text, TouchableOpacity, View, StyleSheet, Alert ,ActivityIndicator } from 'react-native';
+import { Button, Text, TouchableOpacity, View, StyleSheet, Alert, ActivityIndicator,TextInput } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { Picker } from '@react-native-picker/picker';
 import * as MediaLibrary from 'expo-media-library';
 import * as Location from 'expo-location';
 import Footer from './Footer';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
-const url = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/post";
+const url = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/rescue/help";
 
 type LocationCoords = Location.LocationObjectCoords | null;
+
+// const data = {
+//   UserId,
+//   Date,
+//   Time,
+//   Latitude,
+//   Longitude,
+//   Text,
+//   Urgency
+// };
 
 const App: React.FC = () => {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -16,10 +29,14 @@ const App: React.FC = () => {
   const [location, setLocation] = useState<LocationCoords>(null);
   const [heading, setHeading] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState('');
+  const [message, setMessage] = useState('');
+  const [urgency, setUrgency] = useState('3');
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
-      console.log(location?.latitude,location?.longitude);
+      console.log(location?.latitude, location?.longitude);
       await requestCameraPermission();
       await requestMediaLibraryPermission();
 
@@ -37,60 +54,83 @@ const App: React.FC = () => {
         Location.watchHeadingAsync((headingUpdate) => {
           setHeading(headingUpdate.trueHeading);
         });
+
+        await fetchData();
       } catch (error) {
         console.error(error);
         Alert.alert('エラー', '位置情報の取得に失敗しました。');
       }
     })();
   }, []);
-  
+
+  const loadData = async (key: string): Promise<any> => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key);
+      console.log("asyncloadData", jsonValue);
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (e) {
+      console.error('データの取得に失敗しました:', e);
+    }
+  };
+
+  const fetchData = async () => {
+    const savedData = await loadData('myKey');
+    if (savedData) {
+      setUserId(savedData.userId || '');
+    }
+    setLoading(false);
+  };
+
   const savePhoto = useCallback(async (uri: string) => {
     try {
       if (mediaLibraryPermission?.granted) {
         const asset = await MediaLibrary.createAssetAsync(uri);
         await MediaLibrary.createAlbumAsync("MyApp", asset, false);
-        console.log(location);
 
         if (!location) {
           Alert.alert('エラー', '位置情報が取得できません');
           return;
         }
 
+        const now = new Date();
+        const nowdate = now.toISOString().split('T')[0];
+        const nowtime = now.toTimeString().split(' ')
+
         const data = {
-          name: "hirabayasi",
-          birthday: "2005-3-16",
-          gender: ["female"],
-          gps: location
+          userid: userId,
+          date: nowdate,
+          time: nowtime,
+          gps: location,
+          text: message,
+          urgency: urgency
         };
 
-        fetch(url, {
+        const response = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify(data)
-        })
-        .then(response => {
-          if (!response.ok) {
-              throw new Error(`Failed to send data. Status code: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(responseData => {
-          console.log("Data sent successfully!");
-          console.log("Response from Node-RED:", responseData);
-        })
-        .catch(error => {
-          console.error(error.message);
         });
+        console.log("noderedに送る情報",data);
+
+        if (!response.ok) {
+          throw new Error(`Failed to send data. Status code: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        console.log("Data sent successfully!");
+        console.log("Response from Node-RED:", responseData);
         console.log('写真を保存しました');
+        router.replace('/home');
+
       } else {
         console.log('メディアライブラリの権限がありません');
       }
     } catch (error) {
       console.error('写真の保存に失敗しました:', error);
     }
-  }, [mediaLibraryPermission]);
+  }, [mediaLibraryPermission, location, userId, message, urgency]);
 
   const takePicture = async () => {
     if (cameraRef.current) {
@@ -102,7 +142,6 @@ const App: React.FC = () => {
         }
         console.log('写真を撮影しました:', photo.uri);
         await savePhoto(photo.uri);
-
       } catch (error) {
         console.error('写真の撮影に失敗しました:', error);
       }
@@ -130,22 +169,37 @@ const App: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <TextInput
+        multiline={false}
+        style={styles.inputs}
+        placeholder='どんな状況ですか？'
+        value={message}
+        onChangeText={setMessage}
+        // onKeyPress={handleKeyPress}
+      />
+      {/* <Picker
+      selectedValue={gender}
+      style={styles.picker}
+      onValueChange={(itemValue) => setGender(itemValue)}
+    >
+      <Picker.Item label="男性" value="male" />
+      <Picker.Item label="女性" value="female" />
+      <Picker.Item label="その他" value="other" />
+    </Picker> */}
       <CameraView 
         style={styles.camera} 
         ref={cameraRef}
       >
-        
         <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              style={styles.button} 
-              onPress={takePicture} 
-              disabled={loading || !location}
-            >
-              <Text style={styles.buttonText}>写真の撮影</Text>
-            </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.button} 
+            onPress={takePicture} 
+            disabled={loading || !location}
+          >
+            <Text style={styles.buttonText}>写真の撮影</Text>
+          </TouchableOpacity>
         </View>
       </CameraView>
-
       <Footer />
     </View>
   );
@@ -178,6 +232,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
+  },
+  inputs: {
+    margin: 10,
+    padding: 5,
+    borderWidth: 1,
+    fontSize: 20,
+    height: 28,
   },
 });
 

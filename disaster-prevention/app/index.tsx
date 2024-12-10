@@ -65,10 +65,10 @@ export default function LoginScreen() {
       const responseData = await response.json();
       console.log('サーバーからの応答:', responseData);
 
-      if (responseData.success) {
-        await saveData('myKey', { userId, birthday, name: responseData.name, gender: responseData.gender });
+      if (responseData.UserId == userId) {
+        await saveData('myKey', { userId, birthday, name: responseData.UserName, gender: responseData.Gender });
         Alert.alert('ログイン成功', 'ホーム画面に移動します。');
-        router.replace('/home');
+        router.replace('/profile');
       } else {
         Alert.alert('ログイン失敗', responseData.message || 'ユーザー情報が見つかりませんでした。');
       }

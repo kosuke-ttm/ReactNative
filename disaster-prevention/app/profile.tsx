@@ -18,7 +18,7 @@ export default function SampleScreen() {
         setName(savedData.name || '');
         setBirthday(savedData.birthday || '');
         setGender(savedData.gender || '');
-        setUserid(savedData.userid || '')
+        setUserid(savedData.userId || '')
       }
       setLoading(false);
     };
@@ -52,7 +52,7 @@ export default function SampleScreen() {
       <Text style={styles.displayText}>{name}</Text>
       <Text ></Text>
 
-      <Text style={styles.messageText}>【ユーザーID】</Text>
+      <Text style={styles.messageText1}>【ユーザーID※必ず保管してください】</Text>
       <Text style={styles.displayText}>{userid}</Text>
       <Text ></Text>
 
@@ -94,6 +94,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+  },
+  messageText1: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#dc143c',
   },
   picker: {
     margin: 10,
