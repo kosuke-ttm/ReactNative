@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Text, View, StyleSheet, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { Text, View, StyleSheet, ActivityIndicator, Alert, Pressable, Platform } from 'react-native';
 import MapView, { Marker, Callout, Polygon } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Footer from './Footer';
 
-const url = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/rescue/get";
+const url = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/rescue/pin";
 
 type LocationCoords = Location.LocationObjectCoords | null;
 type LocationData = {
@@ -12,6 +12,19 @@ type LocationData = {
   Latitude: number;
   Longitude: number;
 };
+type EarthquakeData = {
+  ID: number;
+  EventID: string;
+  ReportTime: string;
+  ReportNum: number;
+  OriginTime: string;
+  HypoCenter: string;
+  Latitude: number;
+  Longitude: number;
+  Magunitude: number;
+  Depth: number;
+  MaxIntensity: string;
+} | null;
 
 // マーカーのデータ
 const markers = [
@@ -25,6 +38,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const mapRef = useRef<MapView>(null);
   const [locationData, setLocationData] = useState<LocationData[]>([]);
+  const [earthquakeData, setEarthquakeData] = useState<EarthquakeData>(null);
 
   useEffect(() => {
     const fetchLocationData = async () => {
@@ -42,6 +56,24 @@ export default function Home() {
     };
 
     fetchLocationData();
+
+    const fetchEarthquakeData = async () => {
+      try {
+        const response = await fetch('http://192.168.92.72:1880/web');
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (data && data.ID) {  // IDの存在でデータの有無を確認
+          setEarthquakeData(data);
+        }
+      } catch (error) {
+        console.error('地震データの取得に失敗:', error);
+      }
+    };
+
+    // 5秒ごとに地震データを取得
+    const earthquakeInterval = setInterval(fetchEarthquakeData, 5000);
 
     (async () => {
       try {
@@ -65,6 +97,10 @@ export default function Home() {
         setLoading(false);
       }
     })();
+    // クリーンアップ関数を更新
+    return () => {
+      clearInterval(earthquakeInterval);
+    };
   }, []);
 
   const moveToCurrentLocation = () => {
@@ -128,6 +164,14 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
+      {earthquakeData && (
+        <View style={styles.earthquakeAlert}>
+          <Text style={styles.earthquakeText}>
+            震源地: {earthquakeData.HypoCenter}{'\n'}
+            震度: {earthquakeData.MaxIntensity}
+          </Text>
+        </View>
+      )}
       <Text style={styles.text}>
         緯度: {location.latitude.toFixed(6)} 経度: {location.longitude.toFixed(6)}
       </Text>
@@ -186,6 +230,22 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
+  earthquakeAlert: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 30,
+    left: 10,
+    right: 10,
+    backgroundColor: 'rgba(255, 0, 0, 0.8)',
+    padding: 10,
+    borderRadius: 5,
+    zIndex: 1000,
+  },
+  earthquakeText: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   text: {
     fontSize: 20,
     color: 'black',
