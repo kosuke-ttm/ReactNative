@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Text, View, StyleSheet, ActivityIndicator, Alert, Pressable } from 'react-native';
-import MapView, { Marker, Callout, Polygon } from 'react-native-maps';
+import MapView, { Marker, Callout, Polygon,Camera } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Footer from './Footer';
 
@@ -18,40 +18,39 @@ export default function Home() {
   const [heading, setHeading] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const mapRef = useRef<MapView>(null);
+  // 既存の状態変数はそのままで
   const [locationData, setLocationData] = useState<LocationData[]>([]);
+  const markers = [
+    { id: 1, coordinate: { latitude: 35.1350, longitude: 136.9784 }, title: 'マーカー1' },
+    { id: 2, coordinate: { latitude: 35.1350, longitude: 136.9788 }, title: 'マーカー2' },
+    { id: 3, coordinate: { latitude: 35.1350, longitude: 136.9781 }, title: 'マーカー3' },
+  ];
 
   useEffect(() => {
-    
+    // Node-REDからデータを取得する関数
     const fetchLocationData = async () => {
       try {
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          // body: JSON.stringify(data)
-        });
-        console.log(response);
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        console.log(data);
-        // マーカーのデータ
-        const data1 = [
-          { id: 1, coordinate: { latitude: 32.1350, longitude: 136.9784 }, title: 'マーカー1' },
-          { id: 2, coordinate: { latitude: 32.0000, longitude: 136.9790 }, title: 'マーカー2' },
-        ];
-
-        setLocationData(Array.isArray(data) ? data : [data]);
+        if (Array.isArray(data)) {
+          setLocationData(data);
+        } else if (typeof data === 'object' && data !== null) {
+          // 単一のオブジェクトの場合、配列に変換
+          setLocationData([data]);
+        } else {
+          console.error('Received data is not an array or object:', data);
+          setLocationData([]);
+        }
       } catch (error) {
         console.error('Failed to fetch location data:', error);
-        Alert.alert('エラー', 'データの取得に失敗しました。');
+        setLocationData([]);
+        // Alert.alert('エラー', 'データの取得に失敗しました。');
       }
     };
-
     fetchLocationData();
-
     (async () => {
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -62,23 +61,21 @@ export default function Home() {
 
         let { coords } = await Location.getCurrentPositionAsync({});
         setLocation(coords);
+        setLoading(false);
 
-        // ヘッディング（向き）の監視
         Location.watchHeadingAsync((headingUpdate) => {
           setHeading(headingUpdate.trueHeading);
         });
       } catch (error) {
         console.error(error);
         Alert.alert('エラー', '位置情報の取得に失敗しました。');
-      } finally {
-        setLoading(false);
       }
     })();
   }, []);
 
   const moveToCurrentLocation = () => {
     if (location && mapRef.current) {
-      mapRef.current.animateCamera({
+      const camera: Camera = {
         center: {
           latitude: location.latitude,
           longitude: location.longitude,
@@ -87,18 +84,19 @@ export default function Home() {
         heading: heading || 0,
         altitude: 1000,
         zoom: 15,
-      }, { duration: 1000 });
+      };
+      mapRef.current.animateCamera(camera, { duration: 1000 });
     }
   };
-
   const handleRescueComplete = (id: number) => {
     Alert.alert('救助完了', `ID ${id} の救助が完了しました。`);
   };
 
+
   if (loading || !location || heading === null) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+
         <Text>現在地を取得しています...</Text>
       </View>
     );
@@ -106,8 +104,7 @@ export default function Home() {
 
   const ARROW_LENGTH = 0.0003;
   const BASE_WIDTH = 0.00015;
-  const BASE_OFFSET = 0.0001;
-
+  const BASE_OFFSET = 0.00001;
 
   const arrowCoords = [
     {
@@ -135,11 +132,13 @@ export default function Home() {
       longitude: location.longitude + ARROW_LENGTH * Math.sin(heading * (Math.PI / 180)),
     },
   ];
+  // console.log(arrowCoords);
 
   return (
     <View style={styles.container}>
       <Text style={styles.text}>
-        緯度: {location.latitude.toFixed(6)} 経度: {location.longitude.toFixed(6)}
+        緯度: {location.latitude.toFixed(6)}{' '}
+        経度: {location.longitude.toFixed(6)}
       </Text>
       <MapView
         ref={mapRef}
@@ -152,45 +151,57 @@ export default function Home() {
         }}
         showsUserLocation={true}
       >
-        {/* マーカーを表示 */}
-        {locationData.map((markers) => (
+        {markers.map((marker) => (
           <Marker
-            key={markers.id}
-            coordinate={{
-              latitude: markers.Latitude,
-              longitude: markers.Longitude,
-            }}
-            title={`ID: ${markers.id}`}
+            key={marker.id}
+            coordinate={marker.coordinate}
+            title={marker.title}
           >
             <Callout>
               <View style={styles.calloutContainer}>
                 <Text>救助が必要です</Text>
+                <Text>a</Text>
+                <Text>b</Text>
+                <Text>c</Text>
+                <Text>d</Text>
+                <Text>e</Text>
+                <Text>f</Text>
                 <Pressable 
                   style={styles.button} 
-                  onPress={() => handleRescueComplete(markers.id)}
+                  onPress={() => handleRescueComplete(marker.id)}
                 >
                   <Text style={styles.buttonText}>救助完了</Text>
                 </Pressable>
               </View>
             </Callout>
           </Marker>
-        ))}
-        
-        {/* 矢印（三角形）を描画 */}
+          ))}
         <Polygon
           coordinates={arrowCoords}
-          fillColor="rgba(255,0,0,0.5)" // 矢印の色
-          strokeColor="rgba(255,0,0,1)" // 矢印の枠線色
+          fillColor="rgba(0, 150, 255, 0.6)"
+          strokeColor="rgba(0, 0, 255, 0.9)"
           strokeWidth={2}
         />
-        
+        {/* 取得したデータに基づいてマーカーを表示 */}
+        {locationData && locationData.length > 0 && locationData.map((item) => (
+  <Marker
+    key={item.id}
+    coordinate={{
+      latitude: item.Latitude,
+      longitude: item.Longitude,
+    }}
+    title={`ID: ${item.id}`}
+  />
+))}
       </MapView>
 
+      {/* 右下の丸いボタン */}
       <Pressable style={styles.floatingButton} onPress={moveToCurrentLocation}>
         <Text style={styles.buttonText}>現在地</Text>
       </Pressable>
 
       <Footer />
+
     </View>
   );
 }

@@ -81,6 +81,9 @@ export default function LoginScreen() {
   const handleRegister = () => {
     router.replace('/register');
   }
+  const handleDebug = () => {
+    router.replace('/home');
+  }
 
   return (
     <View style={styles.container}>
@@ -106,6 +109,9 @@ export default function LoginScreen() {
       </TouchableOpacity>
       <TouchableOpacity style={styles.regibutton} onPress={handleRegister}>
         <Text style={styles.buttonText}>新規登録</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.regibutton} onPress={handleDebug}>
+        <Text style={styles.buttonText}>debug</Text>
       </TouchableOpacity>
     </View>
   );
