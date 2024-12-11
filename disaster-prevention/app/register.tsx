@@ -4,7 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 
-const urlPost = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/user/register";
+const urlPost = "https://ev2-prod-node-red-279dea14-133.herokuapp.com/user/register";
 
 
 interface CustomAlertProps {

@@ -4,7 +4,7 @@ import MapView, { Marker, Callout, Polygon } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Footer from './Footer';
 
-const url = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/rescue/pin";
+const url = "https://ev2-prod-node-red-279dea14-133.herokuapp.com/rescue/pin";
 
 type LocationCoords = Location.LocationObjectCoords | null;
 type LocationData = {
@@ -21,9 +21,9 @@ export default function Home() {
   const [locationData, setLocationData] = useState<LocationData[]>([]);
 
   useEffect(() => {
+    
     const fetchLocationData = async () => {
       try {
-        // const response = await fetch(url);
         const response = await fetch(url, {
           method: "GET",
           headers: {
@@ -36,6 +36,13 @@ export default function Home() {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
+        console.log(data);
+        // マーカーのデータ
+        const data1 = [
+          { id: 1, coordinate: { latitude: 32.1350, longitude: 136.9784 }, title: 'マーカー1' },
+          { id: 2, coordinate: { latitude: 32.0000, longitude: 136.9790 }, title: 'マーカー2' },
+        ];
+
         setLocationData(Array.isArray(data) ? data : [data]);
       } catch (error) {
         console.error('Failed to fetch location data:', error);
@@ -101,11 +108,6 @@ export default function Home() {
   const BASE_WIDTH = 0.00015;
   const BASE_OFFSET = 0.0001;
 
-  // マーカーのデータ
-const markers = [
-  { id: 1, coordinate: { latitude: 32.1350, longitude: 136.9784 }, title: 'マーカー1' },
-  { id: 2, coordinate: { latitude: 32.0000, longitude: 136.9790 }, title: 'マーカー2' },
-];
 
   const arrowCoords = [
     {

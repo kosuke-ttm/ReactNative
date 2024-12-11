@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type LocationCoords = Location.LocationObjectCoords | null;
 
-const url = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/post";
+const url = "https://ev2-prod-node-red-279dea14-133.herokuapp.com/post";
 
 export default function SampleScreen() {
   const [inputMsg, setInputMsg] = useState(''); 

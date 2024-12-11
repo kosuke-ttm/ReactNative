@@ -8,7 +8,7 @@ import Footer from './Footer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 
-const url = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/rescue/help";
+const url = "https://ev2-prod-node-red-279dea14-133.herokuapp.com/rescue/help";
 
 type LocationCoords = Location.LocationObjectCoords | null;
 
