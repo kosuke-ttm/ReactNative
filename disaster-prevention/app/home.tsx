@@ -5,6 +5,7 @@ import * as Location from 'expo-location';
 import Footer from './Footer';
 
 const url = "https://ev2-prod-node-red-9e067063-fe9.herokuapp.com/rescue/pin";
+const fake_data_url = "http://192.168.1.110:1880/web";
 
 type LocationCoords = Location.LocationObjectCoords | null;
 type LocationData = {
@@ -59,7 +60,7 @@ export default function Home() {
 
     const fetchEarthquakeData = async () => {
       try {
-        const response = await fetch('http://192.168.92.72:1880/web');
+        const response = await fetch(fake_data_url);
         if (!response.ok) {
           throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
         }
