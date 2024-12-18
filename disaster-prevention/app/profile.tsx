@@ -1,126 +1,75 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, StyleSheet, Button, TextInput, Alert, Keyboard } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Text, View, StyleSheet, Alert, Keyboard, ActivityIndicator, Animated } from "react-native";
 import Footer from './Footer';
-import { Picker } from '@react-native-picker/picker'; // Pickerをインポート
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function SampleScreen() {
   const [name, setName] = useState('');
   const [birthday, setBirthday] = useState('');
-  const [gender, setGender] = useState(''); // 性別の状態
-  const [inputMsg, setInputMsg] = useState(''); 
+  const [userid, setUserid] = useState(0);
+  const [gender, setGender] = useState('');
   const [loading, setLoading] = useState(true);
-
-  const url = "https://ev2-prod-node-red-3e84e9ed-10c.herokuapp.com/post";
+  var displaygender = '';
 
   useEffect(() => {
-    (async () => {
+    const fetchData = async () => {
+      const savedData = await loadData('myKey');
+      if (savedData) {
+        setName(savedData.name || '');
+        setBirthday(savedData.birthday || '');
+        setGender(savedData.gender || '');
+        setUserid(savedData.userId || '')
+      }
       setLoading(false);
-    })();
+    };
+    
+    fetchData();
   }, []);
 
-  const handlePost = () => {
-    const data = {
-      name: name,
-      birthday: birthday,
-      gender: gender, // 性別を追加
-      gps: location,
-      message: inputMsg
-    };
-    console.log(data);
-
-    fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Failed to send data. Status code: ${response.status}`);
-      }
-      alert('投稿できました');
-      return response.json();
-    })
-    .then(responseData => {
-      console.log("Data sent successfully!");
-      console.log("Response from Node-RED:", responseData);
-    })
-    .catch(error => {
-      console.error(error.message);
-    });
-
-    setName("");
-    setBirthday("");
-    setGender(""); // 性別のリセット
-    setInputMsg("");
-  };
-  const handleKeyPress = (e: any) => {
-    // Enterキーを押した時
-    if (e.nativeEvent.key === 'Enter') {
-      // 改行の代わりにキーボードを閉じる
-      Keyboard.dismiss();
+  const loadData = async (key: string): Promise<any> => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key);
+      console.log("asyncloadData",jsonValue);
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (e) {
+      console.error('データの取得に失敗しました:', e);
     }
   };
+  
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>読み込み中...</Text>
+      </View>
+    );
+  }
+  if (gender==='female'){
+    displaygender='女性';
+  }else if (gender==='male'){
+    displaygender='男性';
+  }else{
+    displaygender='その他';
+  }
 
   return (
     <View style={styles.container}>
-      <View style={styles.button}>
-        <Ionicons 
-          name="camera-outline" 
-          size={35} 
-          color="#1E90FF"
-          onPress={() => alert("カメラボタンが押されました")} 
-        />
-        <Button
-          title="投稿"
-          onPress={handlePost}
-        />
-      </View>
-      
-      <Text style={styles.messageText}>氏名</Text>
-      <TextInput
-        multiline={false}
-        style={styles.inputs}
-        placeholder='ここに氏名を入力してください'
-        value={name}
-        onChangeText={setName}
-        onKeyPress={handleKeyPress} // Enterキーでキーボードを閉じる
-      />
-      
-      <Text style={styles.messageText}>誕生日</Text>
-      <TextInput
-        multiline={false}
-        style={styles.inputs}
-        placeholder='ここに誕生日を入力してください'
-        value={birthday}
-        onChangeText={setBirthday}
-        onSubmitEditing={() => Keyboard.dismiss()} // エンターキーでキーボードを閉じる
-      />
-      
-      <Text style={styles.messageText}>性別</Text>
-      <Picker
-        selectedValue={gender}
-        style={styles.picker}
-        onValueChange={(itemValue) => 
-          {setGender(itemValue)}} // 性別を選択
-      >
-        <Picker.Item label="男性" value="male" />
-        <Picker.Item label="女性" value="female" />
-        <Picker.Item label="その他" value="other" />
-      </Picker>
 
-      <Text style={styles.messageText}>メッセージ</Text>
-      <TextInput
-        multiline={false}
-        style={styles.inputs}
-        placeholder='メッセージを入力してください'
-        value={inputMsg}
-        onChangeText={setInputMsg}
-        onSubmitEditing={() => Keyboard.dismiss()} // エンターキーでキーボードを閉じる
-      />
+      <Text style={styles.messageText}>【氏名】</Text>
+      <Text style={styles.displayText}>{name}</Text>
+      <Text ></Text>
 
+      <Text style={styles.messageText1}>【ユーザーID※必ず保管してください】</Text>
+      <Text style={styles.displayText}>{userid}</Text>
+      <Text ></Text>
+
+      <Text style={styles.messageText}>【誕生日】</Text>
+      <Text style={styles.displayText}>{birthday}</Text>
+      <Text ></Text>
+
+      <Text style={styles.messageText}>【性別】</Text>
+      <Text style={styles.displayText}>{displaygender}</Text>
       <Footer/>
     </View>
   );
@@ -131,6 +80,12 @@ const styles = StyleSheet.create({
     margin: 10,
     padding: 0,
     flex: 1,
+    backgroundColor: '#fffaf0'
+    
+  },
+  displayText:{
+    fontSize: 24,
+    color: 'black'
   },
   inputs: {
     margin: 10,
@@ -148,10 +103,34 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  messageText1: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#dc143c',
+  },
   picker: {
     margin: 10,
     padding: 5,
+    color: "#333",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  alertContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -100 }, { translateY: -25 }],
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 5,
     borderWidth: 1,
-    fontSize: 20,
+    borderColor: 'black',
+    elevation: 5,
+  },
+  alertText: {
+    fontSize: 16,
   },
 });
