@@ -6,6 +6,7 @@ export default function RootLayout() {
       <Stack.Screen
         name="index"
         options={{
+          title:'ログイン',
           headerBackVisible: false, // 戻るボタンを非表示
           gestureEnabled: false, // スワイプジェスチャーを無効にする
           headerStyle: {
@@ -16,6 +17,7 @@ export default function RootLayout() {
       <Stack.Screen
         name="help"
         options={{
+          title:'救助要請',
           headerBackVisible: false, // 戻るボタンを非表示
           gestureEnabled: false, // スワイプジェスチャーを無効にする
           headerStyle: {
@@ -28,6 +30,7 @@ export default function RootLayout() {
       <Stack.Screen
         name="post"
         options={{
+          title:'投稿',
           headerBackVisible: false, // 戻るボタンを非表示
           gestureEnabled: false, // スワイプジェスチャーを無効にする
           headerStyle: {
@@ -54,6 +57,7 @@ export default function RootLayout() {
       <Stack.Screen
         name="profile"
         options={{
+          title:'プロフィール',
           headerBackVisible: false, // 戻るボタンを非表示
           gestureEnabled: false, // スワイプジェスチャーを無効にする
           headerStyle: {

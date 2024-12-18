@@ -10,6 +10,7 @@ export default function SampleScreen() {
   const [userid, setUserid] = useState(0);
   const [gender, setGender] = useState('');
   const [loading, setLoading] = useState(true);
+  var displaygender = '';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,6 +45,13 @@ export default function SampleScreen() {
       </View>
     );
   }
+  if (gender==='female'){
+    displaygender='女性';
+  }else if (gender==='male'){
+    displaygender='男性';
+  }else{
+    displaygender='その他';
+  }
 
   return (
     <View style={styles.container}>
@@ -61,7 +69,7 @@ export default function SampleScreen() {
       <Text ></Text>
 
       <Text style={styles.messageText}>【性別】</Text>
-      <Text style={styles.displayText}>{gender}</Text>
+      <Text style={styles.displayText}>{displaygender}</Text>
       <Footer/>
     </View>
   );

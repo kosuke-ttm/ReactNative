@@ -1,14 +1,13 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Button, Text, TouchableOpacity, View, StyleSheet, Alert, ActivityIndicator,TextInput } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Picker } from '@react-native-picker/picker';
+import { Button, Text, TouchableOpacity, View, StyleSheet, Alert, Image,TextInput } from 'react-native';
+import { CameraView, useCameraPermissions, Camera } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import * as Location from 'expo-location';
 import Footer from './Footer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 
-const url = "https://ev2-prod-node-red-279dea14-133.herokuapp.com/rescue/help";
+const url = "https://ev2-prod-node-red-9497551b-cd7.herokuapp.com/rescue/help";
 
 type LocationCoords = Location.LocationObjectCoords | null;
 
@@ -36,7 +35,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      console.log(location?.latitude, location?.longitude);
       await requestCameraPermission();
       await requestMediaLibraryPermission();
 
@@ -60,6 +58,7 @@ const App: React.FC = () => {
         console.error(error);
         Alert.alert('エラー', '位置情報の取得に失敗しました。');
       }
+      console.log(location?.latitude, location?.longitude);
     })();
   }, []);
 
@@ -94,15 +93,18 @@ const App: React.FC = () => {
 
         const now = new Date();
         const nowdate = now.toISOString().split('T')[0];
-        const nowtime = now.toTimeString().split(' ')
-
+        const nowtime = now.toTimeString().split(' ');
+        const flag = 0;
+        
+        //TODO:写真のリンク追加
         const data = {
           userid: userId,
           date: nowdate,
           time: nowtime,
           gps: location,
           text: message,
-          urgency: urgency
+          urgency: urgency,
+          flag: flag,
         };
 
         const response = await fetch(url, {
@@ -124,11 +126,41 @@ const App: React.FC = () => {
         console.log('写真を保存しました');
         router.replace('/home');
 
+        const accessToken = "****"; // Google Drive APIのアクセストークンを設定
+        const file = await fetch(uri);
+        const blob = await file.blob();
+  
+        const formData = new FormData();
+        formData.append("file", blob, "photo.jpg");
+        console.log(formData);
+  
+        // const Googleresponse = await fetch(
+        //   "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        //   {
+        //     method: "POST",
+        //     headers: {
+        //       Authorization: `Bearer ${accessToken}`,
+        //     },
+        //     body: formData,
+        //   }
+        // );
+  
+        // if (!Googleresponse.ok) {
+        //   throw new Error(`アップロード失敗: ${Googleresponse.status}`);
+        // }
+  
+        // const Googledata = await Googleresponse.json();
+        // const fileLink = `https://drive.google.com/file/d/${Googledata.id}/view?usp=sharing`;
+        // console.log(fileLink);
+        
+        // Alert.alert("アップロード成功", `リンク: ${fileLink}`);
+
       } else {
         console.log('メディアライブラリの権限がありません');
       }
     } catch (error) {
       console.error('写真の保存に失敗しました:', error);
+      // console.error("Google Drive アップロードエラー:", error);
     }
   }, [mediaLibraryPermission, location, userId, message, urgency]);
 

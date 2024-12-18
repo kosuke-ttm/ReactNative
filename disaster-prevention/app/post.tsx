@@ -7,31 +7,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type LocationCoords = Location.LocationObjectCoords | null;
 
-const url = "https://ev2-prod-node-red-279dea14-133.herokuapp.com/post";
+const url = "https://ev2-prod-node-red-1b385b63-611.herokuapp.com/post";
 
 export default function SampleScreen() {
   const [inputMsg, setInputMsg] = useState(''); 
   const [location, setLocation] = useState<LocationCoords>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadData = async (key: string): Promise<any> => {
-    try {
-      const jsonValue = await AsyncStorage.getItem(key);
-      console.log("asyncloadData",jsonValue);
-      return jsonValue != null ? JSON.parse(jsonValue) : null;
-    } catch (e) {
-      console.error('データの取得に失敗しました:', e);
-    }
-  };
-
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('権限エラー', '位置情報へのアクセスが許可されていません。');
-        setLoading(false);
-        return;
-      }
+      // let { status } = await Location.requestForegroundPermissionsAsync();
+      // if (status !== 'granted') {
+      //   Alert.alert('権限エラー', '位置情報へのアクセスが許可されていません。');
+      //   setLoading(false);
+      //   return;
+      // }
 
       let { coords } = await Location.getCurrentPositionAsync({});
       setLocation(coords);
