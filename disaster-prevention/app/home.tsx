@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Text, View, StyleSheet, ActivityIndicator, Alert, Pressable, Image } from 'react-native';
+import { Text, View, StyleSheet, ActivityIndicator, Alert, Pressable, Image, Platform } from 'react-native';
 import MapView, { Marker, Callout, Polygon, Camera } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Footer from './Footer';
 import { CommonUrl } from './config';
 
-const url = CommonUrl + "/rescue/pin";
+const url = CommonUrl + "rescue/pin";
+const fake_data_url = CommonUrl + "web";
 
 type LocationCoords = Location.LocationObjectCoords | null;
 type LocationData = {
@@ -17,6 +18,25 @@ type JsonPrimitive = string | number | boolean | null;
 type JsonArray = JsonPrimitive[] | JsonObject[];
 type JsonObject = { [key: string]: JsonPrimitive | JsonObject | JsonArray; };
 type Json = JsonPrimitive | JsonArray | JsonObject;
+type EarthquakeData = {
+  ID: number;
+  EventID: string;
+  ReportTime: string;
+  ReportNum: number;
+  OriginTime: string;
+  HypoCenter: string;
+  Latitude: number;
+  Longitude: number;
+  Magunitude: number;
+  Depth: number;
+  MaxIntensity: string;
+} | null;
+
+// マーカーのデータ
+const markers = [
+  { id: 1, coordinate: { latitude: 35.1350, longitude: 136.9784 }, title: 'マーカー1' },
+  { id: 2, coordinate: { latitude: 35.1360, longitude: 136.9790 }, title: 'マーカー2' },
+];
 
 export default function Home() {
   const [location, setLocation] = useState<LocationCoords>(null);
@@ -24,6 +44,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const mapRef = useRef<MapView>(null);
   const [locationData, setLocationData] = useState<LocationData[]>([]);
+  const [earthquakeData, setEarthquakeData] = useState<EarthquakeData>(null);
 
   var markers = [
     { id: 1, coordinate: { latitude: 35.1350, longitude: 136.9784 }, date:'2024-12-12', name:'若井',color:'yellow', message:'助けてください', time:'22:55:23', gender:'男性', uri:'http://drive.google.com/uc?export=view&id=1rYoYOPcr476Ah1XC_K-mj7as212dr9-m' },
@@ -63,6 +84,24 @@ export default function Home() {
 
     fetchLocationData();
 
+    const fetchEarthquakeData = async () => {
+      try {
+        const response = await fetch(fake_data_url);
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (data && data.ID) {  // IDの存在でデータの有無を確認
+          setEarthquakeData(data);
+        }
+      } catch (error) {
+        console.error('地震データの取得に失敗:', error);
+      }
+    };
+
+    // 5秒ごとに地震データを取得
+    const earthquakeInterval = setInterval(fetchEarthquakeData, 5000);
+
     (async () => {
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -81,6 +120,10 @@ export default function Home() {
         Alert.alert('エラー', '位置情報の取得に失敗しました。');
       }
     })();
+    // クリーンアップ関数を更新
+    return () => {
+      clearInterval(earthquakeInterval);
+    };
   }, []);
 
   function fatchData(data: Json): void {
@@ -169,10 +212,17 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      {/* <Text style={styles.text}>
-        緯度: {location.latitude.toFixed(6)}{' '}
-        経度: {location.longitude.toFixed(6)}
-      </Text> */}
+      {earthquakeData && (
+        <View style={styles.earthquakeAlert}>
+          <Text style={styles.earthquakeText}>
+            震源地: {earthquakeData.HypoCenter}{'\n'}
+            震度: {earthquakeData.MaxIntensity}
+          </Text>
+        </View>
+      )}
+      <Text style={styles.text}>
+        緯度: {location.latitude.toFixed(6)} 経度: {location.longitude.toFixed(6)}
+      </Text>
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -251,6 +301,22 @@ const styles = StyleSheet.create({
     legendText: {
       fontSize: 12,
     },
+  earthquakeAlert: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 30,
+    left: 10,
+    right: 10,
+    backgroundColor: 'rgba(255, 0, 0, 0.8)',
+    padding: 10,
+    borderRadius: 5,
+    zIndex: 1000,
+  },
+  earthquakeText: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   text: {
     fontSize: 20,
     color: 'black',
