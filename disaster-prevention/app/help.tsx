@@ -6,8 +6,9 @@ import * as Location from 'expo-location';
 import Footer from './Footer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { CommonUrl } from './config'; // 共有変数をインポート
 
-const url = "https://ev2-prod-node-red-9497551b-cd7.herokuapp.com/rescue/help";
+const url = CommonUrl + "rescue/help";
 
 type LocationCoords = Location.LocationObjectCoords | null;
 

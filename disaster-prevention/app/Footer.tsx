@@ -1,6 +1,6 @@
 import React from 'react';
-import { Text, View, ScrollView, StyleSheet, Pressable } from "react-native";
-import { Link ,useRouter} from "expo-router";
+import { Text, View, StyleSheet, Pressable } from "react-native";
+import { useRouter} from "expo-router";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Entypo from '@expo/vector-icons/Entypo';
 

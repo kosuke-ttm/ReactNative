@@ -3,8 +3,9 @@ import { Text, View, StyleSheet, ActivityIndicator, Alert, Pressable, Image } fr
 import MapView, { Marker, Callout, Polygon, Camera } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Footer from './Footer';
+import { CommonUrl } from './config';
 
-const url = "https://ev2-prod-node-red-9497551b-cd7.herokuapp.com/rescue/pin";
+const url = CommonUrl + "/rescue/pin";
 
 type LocationCoords = Location.LocationObjectCoords | null;
 type LocationData = {

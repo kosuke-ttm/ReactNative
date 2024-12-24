@@ -3,8 +3,9 @@ import { Text, View, StyleSheet, Button, TextInput, Alert, Keyboard, ActivityInd
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { CommonUrl } from "./config";
 
-const urlPost = "https://ev2-prod-node-red-1b385b63-611.herokuapp.com/user/register";
+const urlPost = CommonUrl + "user/register";
 
 
 interface CustomAlertProps {

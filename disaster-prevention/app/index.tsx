@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { all } from 'axios';
+import { CommonUrl } from './config';
 
-const urlPost = "https://ev2-prod-node-red-1b385b63-611.herokuapp.com/user/login";
+const urlPost = CommonUrl + "user/login";
+
 
 export default function LoginScreen() {
   const [userId, setUserId] = useState(0);
