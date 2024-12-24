@@ -30,6 +30,24 @@ export default function SampleScreen() {
     })();
   }, []);
 
+  const loadData = async (key: string): Promise<any> => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key);
+      console.log("asyncloadData", jsonValue);
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (e) {
+      console.error('データの取得に失敗しました:', e);
+    }
+  };
+  const fetchData = async () => {
+    const savedData = await loadData('myKey');
+    //TODO：ユーザー情報を格納する
+    if (savedData) {
+      console.log(savedData.birthday);
+    }
+  };
+  fetchData();
+
   const handlePost = () => {
     if (!location) {
       alert('エラー:位置情報が取得できません');

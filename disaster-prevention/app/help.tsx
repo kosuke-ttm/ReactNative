@@ -59,7 +59,6 @@ const App: React.FC = () => {
         console.error(error);
         Alert.alert('エラー', '位置情報の取得に失敗しました。');
       }
-      console.log(location?.latitude, location?.longitude);
     })();
   }, []);
 

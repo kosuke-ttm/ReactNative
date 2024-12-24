@@ -116,10 +116,10 @@ export default function SampleScreen() {
   
       const responseData = await response.json();
       console.log(responseData);
-      Alert.alert('確定しました');
+      Alert.alert('登録が完了しました！');
       //TODO:ここでサーバーから取ってきたjsonデータからuseridを取ってきて変数useridに格納する処理を書く
       await saveData('myKey', { userid, name, birthday, gender });
-      router.replace('/home');
+      router.replace('/profile');
     } catch (error) {
       if (error instanceof Error) {
         console.error("Error during fetch:", error.message);

@@ -19,7 +19,7 @@ export default function SampleScreen() {
         setName(savedData.name || '');
         setBirthday(savedData.birthday || '');
         setGender(savedData.gender || '');
-        setUserid(savedData.userId || '')
+        setUserid(savedData.userid || '')
       }
       setLoading(false);
     };
