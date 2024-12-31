@@ -45,7 +45,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ message, visible }) => {
 export default function SampleScreen() {
   const [name, setName] = useState('');
   const [birthday, setBirthday] = useState('');
-  const [userid] = useState(Date.now()); // ユニークなuseridとして現在のタイムスタンプを使用
+  const [userId] = useState(Date.now()); // ユニークなuseridとして現在のタイムスタンプを使用
   const [gender, setGender] = useState('other');
   const [loading, setLoading] = useState(true);
   const [alertVisible, setAlertVisible] = useState(false);
@@ -97,7 +97,7 @@ export default function SampleScreen() {
       return;
     }
 
-    const dataToSend = { userid, name, birthday, gender };
+    const dataToSend = { userId, name, birthday, gender };
     console.log("サーバーに送る情報：", dataToSend);
     showCustomAlert('確定中...');
   
@@ -118,7 +118,7 @@ export default function SampleScreen() {
       console.log(responseData);
       Alert.alert('登録が完了しました！');
       //TODO:ここでサーバーから取ってきたjsonデータからuseridを取ってきて変数useridに格納する処理を書く
-      await saveData('myKey', { userid, name, birthday, gender });
+      await saveData('myKey', { userId, name, birthday, gender });
       router.replace('/profile');
     } catch (error) {
       if (error instanceof Error) {

@@ -8,7 +8,7 @@ import { CommonUrl } from './config';
 
 type LocationCoords = Location.LocationObjectCoords | null;
 
-const url = CommonUrl+"post";
+const url = CommonUrl + "post/post";
 
 export default function SampleScreen() {
   const [inputMsg, setInputMsg] = useState(''); 
@@ -39,53 +39,55 @@ export default function SampleScreen() {
       console.error('データの取得に失敗しました:', e);
     }
   };
-  const fetchData = async () => {
-    const savedData = await loadData('myKey');
-    //TODO：ユーザー情報を格納する
-    if (savedData) {
-      console.log(savedData.birthday);
-    }
-  };
-  fetchData();
+  
 
   const handlePost = () => {
     if (!location) {
       alert('エラー:位置情報が取得できません');
       return;
     }
-
-    const data = {
-      name: "hayasi",
-      birthday: "2010-3-16",
-      gender: ["male"],
-      gps: location,
-      message: inputMsg
-    };
-    console.log(data);
-
-    fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Failed to send data. Status code: ${response.status}`);
+    const fetchData = async () => {
+      const savedData = await loadData('myKey');
+      //TODO：ユーザー情報を格納する
+      if (savedData) {
+        console.log(savedData.birthday);
+        
       }
-      alert('投稿できました');
-      return response.json();
-    })
-    .then(responseData => {
-      console.log("Data sent successfully!");
-      console.log("Response from Node-RED:", responseData);
-    })
-    .catch(error => {
-      console.error(error.message);
-    });
-
-    setInputMsg("");
+      const now = new Date();
+      const nowdate = now.toISOString().split('T')[0];
+      const nowtime = now.toTimeString().split(' ');
+      const data = {
+        userid: savedData.userId,
+        date: nowdate,
+        time: nowtime,
+        gps: location,
+        text: inputMsg
+      };
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to send data. Status code: ${response.status}`);
+        }
+        alert('投稿できました');
+        return response.json();
+      })
+      .then(responseData => {
+        console.log("Data sent successfully!");
+        console.log("Response from Node-RED:", responseData);
+      })
+      .catch(error => {
+        console.error(error.message);
+      });
+      console.log("data:",data);
+      setInputMsg("");
+    };
+    fetchData();
   };
 
   return (

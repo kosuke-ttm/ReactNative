@@ -6,6 +6,7 @@ import Footer from './Footer';
 import { CommonUrl } from './config';
 
 const url = CommonUrl + "/rescue/pin";
+const posturl = CommonUrl + "/post/pin";
 
 type LocationCoords = Location.LocationObjectCoords | null;
 type LocationData = {
@@ -28,8 +29,10 @@ export default function Home() {
   var markers = [
     { id: 1, coordinate: { latitude: 35.1350, longitude: 136.9784 }, date:'2024-12-12', name:'若井',color:'yellow', message:'助けてください', time:'22:55:23', gender:'男性', uri:'http://drive.google.com/uc?export=view&id=1rYoYOPcr476Ah1XC_K-mj7as212dr9-m' },
     { id: 3, coordinate: { latitude: 35.1350, longitude: 136.9781 }, date:'2024-12-12', name:'藤澤',color:'red', message:'助けてください', time:'22:55:23', gender:'男性' , uri:'http://drive.google.com/uc?export=view&id=1NXS5yCpY320y2JR_UMGp3WBPT6A-IzCi'},
-    { id: 2, coordinate: { latitude: 35.1350, longitude: 136.9788 }, date:'2024-12-12', name:'大森',color:'blue', message:'助けてください', time:'22:55:23', gender:'男性', uri:'http://drive.google.com/uc?export=view&id=1rYoYOPcr476Ah1XC_K-mj7as212dr9-m'},
-    { id: 4, coordinate: { latitude: 35.134, longitude: 136.9782 }, date:'2024-12-10', name:'元貴',color:'skyblue', message:'瓦礫が多くて通れません', time:'22:55:23', gender:'女性', uri:'http://drive.google.com/uc?export=view&id=1NXS5yCpY320y2JR_UMGp3WBPT6A-IzCi' },
+    { id: 2, coordinate: { latitude: 35.1350, longitude: 136.9788 }, date:'2024-12-12', name:'鈴木',color:'blue', message:'助けてください', time:'22:55:23', gender:'男性', uri:'http://drive.google.com/uc?export=view&id=1rYoYOPcr476Ah1XC_K-mj7as212dr9-m'},
+    { id: 4, coordinate: { latitude: 35.134, longitude: 136.9782 }, date:'2024-12-10', name:'田中',color:'skyblue', message:'瓦礫が多くて通れません', time:'22:55:23', gender:'女性', uri:'http://drive.google.com/uc?export=view&id=1NXS5yCpY320y2JR_UMGp3WBPT6A-IzCi' },
+    { id: 5, coordinate: { latitude: 35.1360, longitude: 136.9788 }, date:'2024-12-12', name:'塩釜',color:'blue', message:'助けてください', time:'22:55:23', gender:'男性', uri:'http://drive.google.com/uc?export=view&id=1rYoYOPcr476Ah1XC_K-mj7as212dr9-m'},
+
   ];
   // https://drive.google.com/file/d/1rYoYOPcr476Ah1XC_K-mj7as212dr9-m/view?usp=sharing
 

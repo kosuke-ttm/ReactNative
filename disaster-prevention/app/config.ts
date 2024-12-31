@@ -1,1 +1,1 @@
-export const CommonUrl = "https://ev2-prod-node-red-a0ee8cdd-b42.herokuapp.com/"
+export const CommonUrl = "https://ev2-prod-node-red-958e362c-c9d.herokuapp.com/"
